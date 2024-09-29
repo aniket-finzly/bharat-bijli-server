@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: BHARAT BIJLI APP
+  datasource:
+    url: ${JDBC_URL}                  # Use environment variable for JDBC URL
+    username: ${DB_USERNAME}          # Use environment variable for DB username
+    password: ${DB_PASSWORD}          # Use environment variable for DB password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false               # Disables Open-In-View to prevent lazy loading issues during view rendering
+    hibernate:
+      ddl-auto: update                # Automatically updates the database schema based on your entities
+      show-sql: true                  # Enables logging of SQL statements to the console
+      database: mysql                 # Specifies the database type (though not typically required in this context)
+      database-platform: org.hibernate.dialect.MySQLDialect  # Sets the Hibernate dialect for MySQL
+    properties:
+      hibernate:
+        format_sql: true              # Formats the SQL output for better readability
+
+  mail:
+    host: "smtp.gmail.com"
+    port: 587
+    username: ${MAIL_USERNAME}        # Use environment variable for mail username
+    password: ${MAIL_PASSWORD}        # Use environment variable for mail password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+server:
+  port: 8080
+jwt:
+  secret: ${JWT_SECRET}               # Use environment variable for JWT secret
+  expiresIn: ${JWT_EXPIRES_IN}        # Use environment variable for token expiration time
+

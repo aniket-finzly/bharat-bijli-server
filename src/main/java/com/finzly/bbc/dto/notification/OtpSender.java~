@@ -1,0 +1,12 @@
+package com.finzly.bbc.models;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class OtpSendRequest {
+    @NotNull
+    private String email; // Change to email since we're sending OTP to email
+}

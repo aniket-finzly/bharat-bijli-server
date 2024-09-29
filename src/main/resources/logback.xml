@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console appender for logging with colored output -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Default pattern with colors for different packages -->
+            <pattern>
+                %cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %yellow(%logger{36}) - %magenta(%msg) %n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger for global logging -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+
+    <!-- Custom logger for controllers with DEBUG level -->
+    <logger name="com.finzly.bbc.controllers" level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+
+    <!-- Reduce log level for Spring, Hibernate, and Tomcat to minimize output -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
+    <!-- DEBUG level for your application code -->
+    <logger name="com.finzly.bbc" level="INFO"/>
+    <logger name="com.finzly.bbc.services" level="DEBUG"/>
+    <logger name="com.finzly.bbc.repositories" level="TRACE"/>
+</configuration>
