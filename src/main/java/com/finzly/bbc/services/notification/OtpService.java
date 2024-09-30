@@ -120,11 +120,10 @@ public class OtpService {
 
     public String verifyOtpForUser (String userId, String otpCode) {
         if (userId.startsWith ("CST")) {
-          return   verifyOtpForCustomer (userId, otpCode);
+            return verifyOtpForCustomer (userId, otpCode);
         } else if (userId.startsWith ("EMP")) {
-          return   verifyOtpForEmployee (userId, otpCode);
-        }
-        else
+            return verifyOtpForEmployee (userId, otpCode);
+        } else
             throw new IllegalArgumentException ("Invalid user ID: " + userId);
     }
 
@@ -132,9 +131,8 @@ public class OtpService {
         Optional<Employee> employeeOptional = employeeRepository.findById (userId);
         if (employeeOptional.isPresent ()) {
             Employee employee = employeeOptional.get ();
-           return  verifyOtp (employee.getOtp (), otpCode, employee);
-        }
-        else
+            return verifyOtp (employee.getOtp (), otpCode, employee);
+        } else
             throw new IllegalArgumentException ("Invalid user ID: " + userId);
     }
 
@@ -142,9 +140,8 @@ public class OtpService {
         Optional<Customer> customerOptional = customerRepository.findById (userId);
         if (customerOptional.isPresent ()) {
             Customer customer = customerOptional.get ();
-           return verifyOtp (customer.getOtp (), otpCode, customer);
-        }
-        else
+            return verifyOtp (customer.getOtp (), otpCode, customer);
+        } else
             throw new IllegalArgumentException ("Invalid user ID: " + userId);
     }
 
@@ -199,9 +196,6 @@ public class OtpService {
 
         return "";
     }
-
-
-
 
 
 }

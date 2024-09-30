@@ -20,16 +20,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
+    public UserDetails loadUserByUsername (String userId) throws UsernameNotFoundException {
+        User user = userRepository.findById (userId)
+                .orElseThrow (() -> new UsernameNotFoundException ("User not found with ID: " + userId));
 
-        return new org.springframework.security.core.userdetails.User(user.getId(), "", getAuthorities(user));
+        return new org.springframework.security.core.userdetails.User (user.getId (), "", getAuthorities (user));
     }
 
-    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
+    private Collection<? extends GrantedAuthority> getAuthorities (User user) {
         // Set roles based on user type (admin, employee, customer, etc.)
-        String role = user.isAdmin() ? "ROLE_ADMIN" : "ROLE_USER";
-        return Collections.singletonList(new SimpleGrantedAuthority(role));
+        String role = user.isAdmin () ? "ROLE_ADMIN" : "ROLE_USER";
+        return Collections.singletonList (new SimpleGrantedAuthority (role));
     }
 }

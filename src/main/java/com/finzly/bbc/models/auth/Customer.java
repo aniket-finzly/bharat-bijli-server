@@ -31,12 +31,12 @@ public class Customer {
     @JoinColumn(name = "otp_id", referencedColumnName = "id")
     private OTP otp;
 
+    public static String generateCustomerId () {
+        return "CST" + String.format ("%07d", new Random ().nextInt (10000000));
+    }
+
     @PrePersist
     public void onCreate () {
         this.customerId = generateCustomerId ();
-    }
-
-    public static String generateCustomerId () {
-        return "CST" + String.format ("%07d", new Random ().nextInt (10000000));
     }
 }

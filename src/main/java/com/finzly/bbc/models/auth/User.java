@@ -1,6 +1,5 @@
 package com.finzly.bbc.models.auth;
 
-import com.finzly.bbc.models.notification.OTP;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

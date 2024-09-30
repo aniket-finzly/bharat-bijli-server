@@ -33,12 +33,12 @@ public class Employee {
     @JoinColumn(name = "otp_id", referencedColumnName = "id")
     private OTP otp;
 
+    public static String generateEmployeeId () {
+        return "EMP" + String.format ("%07d", new Random ().nextInt (10000000));
+    }
+
     @PrePersist
     public void onCreate () {
         this.employeeId = generateEmployeeId ();
-    }
-
-    public static String generateEmployeeId () {
-        return "EMP" + String.format ("%07d", new Random ().nextInt (10000000));
     }
 }

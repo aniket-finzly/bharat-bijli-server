@@ -12,6 +12,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -24,17 +27,25 @@ public class SpringSecurity {
     private JwtFilter jwtFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests(request -> request
+    public SecurityFilterChain securityFilterChain (HttpSecurity http) throws Exception {
+        return http.
+                cors (cors -> cors.configurationSource (request -> {
+                    CorsConfiguration config = new CorsConfiguration ();
+                    config.setAllowedOrigins (List.of ("*"));
+//                    config.setAllowedMethods (List.of ("*"));
+//                    config.setAllowedHeaders (List.of ("*"));
+                    return config;
+                })).
+                authorizeHttpRequests (request -> request
 //                        .requestMatchers ("/api/auth/**").permitAll ()
-                        .anyRequest().permitAll ())
-                .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                        .anyRequest ().permitAll ())
+                .csrf (AbstractHttpConfigurer::disable)
+                .addFilterBefore (jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .build ();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration auth) throws Exception {
-        return auth.getAuthenticationManager();
+    public AuthenticationManager authenticationManager (AuthenticationConfiguration auth) throws Exception {
+        return auth.getAuthenticationManager ();
     }
 }

@@ -1,6 +1,5 @@
 package com.finzly.bbc.controllers;
 
-import aj.org.objectweb.asm.commons.TryCatchBlockSorter;
 import com.finzly.bbc.dto.notification.OtpSendRequestEmail;
 import com.finzly.bbc.dto.notification.OtpSendRequestUserId;
 import com.finzly.bbc.dto.notification.OtpVerifyRequest;
@@ -33,7 +32,7 @@ public class OtpController {
     @PostMapping("/verify-otp-user")
     public ResponseEntity<ApiResponse<String>> verifyOtp (@RequestBody OtpVerifyRequest request) {
         try {
-        String result =   otpService.verifyOtpForUser (request.getUserId (), request.getOtpCode ());
+            String result = otpService.verifyOtpForUser (request.getUserId (), request.getOtpCode ());
             return ResponseEntity.ok (ApiResponse.success ("OTP verified successfully.", result));
         } catch (Exception e) {
             return ResponseEntity.ok (ApiResponse.error ("OTP verification failed.", 400));

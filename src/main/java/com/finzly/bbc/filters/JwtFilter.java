@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -26,40 +27,40 @@ public class JwtFilter extends OncePerRequestFilter {
     private UserDetailsServiceImpl userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal (HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        final String authorizationHeader = request.getHeader("Authorization");
+        final String authorizationHeader = request.getHeader ("Authorization");
 
         String jwtToken = null;
         String userId = null;
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwtToken = authorizationHeader.substring(7);  // Extract the JWT token
+        if (authorizationHeader != null && authorizationHeader.startsWith ("Bearer ")) {
+            jwtToken = authorizationHeader.substring (7);  // Extract the JWT token
             try {
-                userId = jwtUtil.getEmployeeId(jwtToken);  // Try to get Employee ID
+                userId = jwtUtil.getEmployeeId (jwtToken);  // Try to get Employee ID
                 if (userId == null) {
-                    userId = jwtUtil.getCustomerId(jwtToken);  // Fallback to Customer ID
+                    userId = jwtUtil.getCustomerId (jwtToken);  // Fallback to Customer ID
                 }
             } catch (Exception e) {
-                logger.error("Unable to extract user ID from token: " + e.getMessage());
+                logger.error ("Unable to extract user ID from token: " + e.getMessage ());
             }
         }
 
-        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
-            if (jwtUtil.validateToken(jwtToken, userId)) {
+        if (userId != null && SecurityContextHolder.getContext ().getAuthentication () == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername (userId);
+            if (jwtUtil.validateToken (jwtToken, userId)) {
                 UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken (userDetails, null, userDetails.getAuthorities ());
 
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authenticationToken.setDetails (new WebAuthenticationDetailsSource ().buildDetails (request));
 
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                SecurityContextHolder.getContext ().setAuthentication (authenticationToken);
             } else {
-                logger.warn("JWT token is invalid or expired for user: " + userId);
+                logger.warn ("JWT token is invalid or expired for user: " + userId);
             }
         }
 
-        chain.doFilter(request, response);
+        chain.doFilter (request, response);
     }
 }

@@ -17,38 +17,38 @@ import java.util.concurrent.Executor;
 public class AsyncConfig implements AsyncConfigurer {
 
     @Bean(name = "emailTaskExecutor")
-    public Executor emailTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(4);
-        executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("Email-");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(30);
-        executor.initialize();
+    public Executor emailTaskExecutor () {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor ();
+        executor.setCorePoolSize (2);
+        executor.setMaxPoolSize (4);
+        executor.setQueueCapacity (100);
+        executor.setThreadNamePrefix ("Email-");
+        executor.setWaitForTasksToCompleteOnShutdown (true);
+        executor.setAwaitTerminationSeconds (30);
+        executor.initialize ();
         return executor;
     }
 
     @Bean(name = "fileLoadingTaskExecutor")
-    public Executor fileLoadingTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(4);
-        executor.setQueueCapacity(50);
-        executor.setThreadNamePrefix("File-");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(30);
-        executor.initialize();
+    public Executor fileLoadingTaskExecutor () {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor ();
+        executor.setCorePoolSize (2);
+        executor.setMaxPoolSize (4);
+        executor.setQueueCapacity (50);
+        executor.setThreadNamePrefix ("File-");
+        executor.setWaitForTasksToCompleteOnShutdown (true);
+        executor.setAwaitTerminationSeconds (30);
+        executor.initialize ();
         return executor;
     }
 
     @Override
-    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler () {
         return (Throwable throwable, Method method, Object... obj) -> {
-            log.error("Exception message - {}", throwable.getMessage());
-            log.error("Method name - {}", method.getName());
+            log.error ("Exception message - {}", throwable.getMessage ());
+            log.error ("Method name - {}", method.getName ());
             for (Object param : obj) {
-                log.error("Parameter value - {}", param);
+                log.error ("Parameter value - {}", param);
             }
         };
     }

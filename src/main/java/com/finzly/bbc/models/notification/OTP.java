@@ -19,43 +19,37 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class OTP {
 
+    public static final int MAX_OTP_ATTEMPTS = 3;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @NotBlank(message = "OTP is mandatory")
     @Column(length = 6, unique = true, nullable = false)
     private String otp;
-
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
-
     private LocalDateTime expiresAt;
-
     private int otpAttemptCount = 0;
 
-    public static final int MAX_OTP_ATTEMPTS = 3;
-
-
-    public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+    public boolean isExpired () {
+        return LocalDateTime.now ().isAfter (expiresAt);
     }
 
-    public boolean isAttemptLimitExceeded() {
+    public boolean isAttemptLimitExceeded () {
         return otpAttemptCount >= MAX_OTP_ATTEMPTS;
     }
 
-    public boolean isValidOtp() {
-        return !isExpired() && !isAttemptLimitExceeded();
+    public boolean isValidOtp () {
+        return !isExpired () && !isAttemptLimitExceeded ();
     }
 
     @PrePersist
-    public void generateOtp() {
-        this.otp = OtpUtil.generateOtpCode(6);
+    public void generateOtp () {
+        this.otp = OtpUtil.generateOtpCode (6);
         this.otpAttemptCount = 0;
-        this.createdAt = LocalDateTime.now();
-        this.expiresAt = this.createdAt.plusMinutes(5);
+        this.createdAt = LocalDateTime.now ();
+        this.expiresAt = this.createdAt.plusMinutes (5);
     }
 
 

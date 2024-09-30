@@ -5,20 +5,21 @@
         <encoder>
             <!-- Default pattern with colors for different packages -->
             <pattern>
-                %cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %yellow(%logger{36}) - %magenta(%msg) %n
+                %cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %yellow(%logger{36}) - %magenta(%msg)
+                %n
             </pattern>
         </encoder>
     </appender>
 
     <!-- Root logger for global logging -->
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="CONSOLE"/>
     </root>
 
 
     <!-- Custom logger for controllers with DEBUG level -->
     <logger name="com.finzly.bbc.controllers" level="INFO">
-        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
 

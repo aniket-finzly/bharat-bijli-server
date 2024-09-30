@@ -1,4 +1,6 @@
 spring:
+  profile:
+    active: aniket
   application:
     name: BHARAT BIJLI APP
   datasource:
