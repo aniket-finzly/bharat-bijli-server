@@ -9,6 +9,7 @@ import com.finzly.bbc.models.auth.Employee;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.services.auth.EmployeeService;
 import com.finzly.bbc.services.auth.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth/employees")
+@Tag(name = "Employees API", description = "Employees API for managing employees. Create, read, update, delete employees. Get employee by ID.")
 public class EmployeeController {
 
     @Autowired

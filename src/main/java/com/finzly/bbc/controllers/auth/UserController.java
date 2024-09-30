@@ -5,6 +5,7 @@ import com.finzly.bbc.dto.auth.UserDTO;
 import com.finzly.bbc.dto.auth.mapper.UserMapper;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.services.auth.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth/users")
+@Tag(name = "User API", description = "User API for user management, create, update, delete, get")
 public class UserController {
 
     @Autowired

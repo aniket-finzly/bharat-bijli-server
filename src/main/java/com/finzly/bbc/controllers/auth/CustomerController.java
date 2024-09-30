@@ -8,6 +8,7 @@ import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.services.auth.CustomerService;
 import com.finzly.bbc.services.auth.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth/customers")
+@Tag(name = "Customer", description = "Customer API for creating, updating, deleting and getting customers with user details")
 public class CustomerController {
 
     @Autowired
