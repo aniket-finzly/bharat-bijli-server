@@ -32,12 +32,12 @@ public class SpringSecurity {
                 cors (cors -> cors.configurationSource (request -> {
                     CorsConfiguration config = new CorsConfiguration ();
                     config.setAllowedOrigins (List.of ("*"));
-//                    config.setAllowedMethods (List.of ("*"));
-//                    config.setAllowedHeaders (List.of ("*"));
+                    config.setAllowedMethods (List.of ("*"));
+                    config.setAllowedHeaders (List.of ("*"));
                     return config;
                 })).
                 authorizeHttpRequests (request -> request
-//                        .requestMatchers ("/api/auth/**").permitAll ()
+                        .requestMatchers ("/auth/otp/**", "/api-docs/**").permitAll ()
                         .anyRequest ().permitAll ())
                 .csrf (AbstractHttpConfigurer::disable)
                 .addFilterBefore (jwtFilter, UsernamePasswordAuthenticationFilter.class)

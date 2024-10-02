@@ -5,8 +5,8 @@
         <encoder>
             <!-- Default pattern with colors for different packages -->
             <pattern>
-                %cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %yellow(%logger{36}) - %magenta(%msg)
-                %n
+                %n %cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %yellow(%logger{36}) -
+                %magenta(%msg)
             </pattern>
         </encoder>
     </appender>

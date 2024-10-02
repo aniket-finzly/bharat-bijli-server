@@ -20,8 +20,8 @@ spring:
         format_sql: true              # Formats the SQL output for better readability
 
   mail:
-    host: "smtp.gmail.com"
-    port: 587
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}        # Use environment variable for mail username
     password: ${MAIL_PASSWORD}        # Use environment variable for mail password
     properties:

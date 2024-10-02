@@ -26,12 +26,12 @@ public class JwtUtil {
 
     public String getEmployeeId (String token) {
         Claims claims = getAllClaims (token);
-        return claims.getSubject ();
+        return claims.get ("EMP_ID", String.class);
     }
 
     public String getCustomerId (String token) {
         Claims claims = getAllClaims (token);
-        return claims.get ("custId", String.class);
+        return claims.get ("CST_ID", String.class);
     }
 
     public Date getExpiration (String token) {

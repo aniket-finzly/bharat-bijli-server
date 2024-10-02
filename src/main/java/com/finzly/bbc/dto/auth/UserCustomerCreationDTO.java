@@ -14,7 +14,6 @@ public class UserCustomerCreationDTO {
     private String firstName;
     private String lastName;
     private String phoneNumber;
-    private boolean isAdmin;
     private String address;
 }
 

@@ -12,7 +12,6 @@ public class UserCustomerCreationMapper {
                 .firstName (dto.getFirstName ())
                 .lastName (dto.getLastName ())
                 .phoneNumber (dto.getPhoneNumber ())
-                .isAdmin (dto.isAdmin ())
                 .build ();
     }
 

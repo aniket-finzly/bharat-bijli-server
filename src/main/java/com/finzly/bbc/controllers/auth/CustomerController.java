@@ -2,10 +2,6 @@ package com.finzly.bbc.controllers.auth;
 
 import com.finzly.bbc.dto.auth.CustomerDTO;
 import com.finzly.bbc.dto.auth.UserCustomerCreationDTO;
-import com.finzly.bbc.dto.auth.mapper.CustomerMapper;
-import com.finzly.bbc.dto.auth.mapper.UserCustomerCreationMapper;
-import com.finzly.bbc.models.auth.Customer;
-import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.services.auth.CustomerService;
 import com.finzly.bbc.services.auth.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth/customers")
@@ -29,40 +24,27 @@ public class CustomerController {
 
     @PostMapping
     public ResponseEntity<CustomerDTO> createCustomer (@RequestBody CustomerDTO customerDTO) {
-        Customer customer = CustomerMapper.toEntity (customerDTO);
-        Customer createdCustomer = customerService.createCustomer (customer);
-        return ResponseEntity.ok (CustomerMapper.toDTO (createdCustomer));
+        return ResponseEntity.ok (customerService.createCustomer (customerDTO));
     }
 
     @PostMapping("/create-with-user")
     public ResponseEntity<CustomerDTO> createCustomerWithUserDetails (@RequestBody UserCustomerCreationDTO userCustomerCreationDTO) {
-        User user = UserCustomerCreationMapper.toUser (userCustomerCreationDTO);
-        User createdUser = userService.createUser (user);
-        Customer customer = UserCustomerCreationMapper.toCustomer (userCustomerCreationDTO, createdUser);
-        Customer createdCustomer = customerService.createCustomer (customer);
-        return ResponseEntity.ok (CustomerMapper.toDTO (createdCustomer));
+        return ResponseEntity.ok (customerService.createCustomerWithUserDetails (userCustomerCreationDTO));
     }
 
     @GetMapping("/{customerId}")
     public ResponseEntity<CustomerDTO> getCustomerById (@PathVariable String customerId) {
-        Customer customer = customerService.getCustomerById (customerId);
-        return ResponseEntity.ok (CustomerMapper.toDTO (customer));
+        return ResponseEntity.ok (customerService.getCustomerById (customerId));
     }
 
     @GetMapping
     public ResponseEntity<List<CustomerDTO>> getAllCustomers () {
-        List<Customer> customers = customerService.getAllCustomers ();
-        List<CustomerDTO> customerDTOs = customers.stream ()
-                .map (CustomerMapper::toDTO)
-                .collect (Collectors.toList ());
-        return ResponseEntity.ok (customerDTOs);
+        return ResponseEntity.ok (customerService.getAllCustomers ());
     }
 
     @PutMapping("/{customerId}")
     public ResponseEntity<CustomerDTO> updateCustomer (@PathVariable String customerId, @RequestBody CustomerDTO customerDTO) {
-        Customer customer = CustomerMapper.toEntity (customerDTO);
-        Customer updatedCustomer = customerService.updateCustomer (customerId, customer);
-        return ResponseEntity.ok (CustomerMapper.toDTO (updatedCustomer));
+        return ResponseEntity.ok (customerService.updateCustomer (customerId, customerDTO));
     }
 
     @DeleteMapping("/{customerId}")
@@ -78,10 +60,6 @@ public class CustomerController {
             @RequestParam(required = false) String phoneNumber,
             @RequestParam(required = false) Boolean isAdmin) {
 
-        List<Customer> customers = customerService.searchCustomers (userId, email, phoneNumber, isAdmin);
-        List<CustomerDTO> customerDTOs = customers.stream ()
-                .map (CustomerMapper::toDTO)
-                .collect (Collectors.toList ());
-        return ResponseEntity.ok (customerDTOs);
+        return ResponseEntity.ok (customerService.searchCustomers (userId, email, phoneNumber, isAdmin));
     }
 }

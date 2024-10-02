@@ -44,7 +44,6 @@ public class OTP {
         return !isExpired () && !isAttemptLimitExceeded ();
     }
 
-    @PrePersist
     public void generateOtp () {
         this.otp = OtpUtil.generateOtpCode (6);
         this.otpAttemptCount = 0;
