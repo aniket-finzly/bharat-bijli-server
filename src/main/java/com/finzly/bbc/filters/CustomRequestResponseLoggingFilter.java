@@ -19,17 +19,16 @@ public class CustomRequestResponseLoggingFilter extends OncePerRequestFilter {
     protected void doFilterInternal (HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         if (DispatcherType.REQUEST.equals (request.getDispatcherType ())) {
-            String requestId = java.util.UUID.randomUUID ().toString ();
             String clientIp = request.getRemoteAddr ();
             String userAgent = request.getHeader ("User-Agent");
 
-            log.info ("ID: {}, Request: {} {} from {} - {}", requestId, request.getMethod (), request.getRequestURI (), clientIp, userAgent);
+            log.info ("Request: {} {} from {} - {}", request.getMethod (), request.getRequestURI (), clientIp, userAgent);
 
             try {
                 filterChain.doFilter (request, response);
-                log.info ("ID: {}, Response: {}", requestId, response.getStatus ());
+                log.info ("Response: {}", response.getStatus ());
             } catch (Exception e) {
-                log.error ("ID: {}, Exception: {}", requestId, e.getMessage ());
+                log.error ("Exception: {}", e.getMessage ());
                 response.setStatus (HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response.getWriter ().write ("Internal Server Error");
             }

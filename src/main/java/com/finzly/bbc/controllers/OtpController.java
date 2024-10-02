@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag (name = "OTP API", description = "API for sending and verifying OTP")
+@Tag(name = "OTP API", description = "API for sending and verifying OTP")
 public class OtpController {
 
     private final EmailService emailService;

@@ -1,44 +1,46 @@
 package com.finzly.bbc.models.billing;
 
-import com.finzly.bbc.models.auth.Customer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "invoices")
+@Table(name = "invoice")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Invoice {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, unique = true)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
-
-    private double amountDue;
-    private LocalDate dueDate;
-    private LocalDate billDate;
+    @JoinColumn(name = "connection_id", nullable = false)
+    private Connection connection; // Relationship with Connection
 
     @Column(nullable = false)
-    private boolean isPaid;
+    private LocalDateTime billingPeriodStart; // Changed to LocalDateTime
 
-    private double discount;
+    @Column(nullable = false)
+    private LocalDateTime billingPeriodEnd; // Changed to LocalDateTime
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private BigDecimal totalUnits;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    @Column(nullable = false)
+    private BigDecimal totalAmount;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    private LocalDateTime dueDate;
+
+    private LocalDateTime createdAt = LocalDateTime.now (); // Set to current date and time
+    private LocalDateTime updatedAt = LocalDateTime.now (); // Set to current date and time
 }
