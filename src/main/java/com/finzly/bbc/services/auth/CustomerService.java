@@ -77,10 +77,10 @@ public class CustomerService {
 
     // Delete a customer by their ID
     public void deleteCustomer (String customerId) {
-        if (!customerRepository.existsById (customerId)) {
-            throw new RuntimeException ("Customer not found");
-        }
-        customerRepository.deleteById (customerId);
+        // Delete the customer
+        Customer customer = customerRepository.findById (customerId)
+                .orElseThrow (() -> new RuntimeException ("Customer not found"));
+        customerRepository.delete (customer);
     }
 
     // Search for customers based on provided parameters

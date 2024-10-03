@@ -1,0 +1,88 @@
+package com.finzly.bbc.services.payment;
+
+import com.finzly.bbc.exceptions.custom.payment.AccountNotFoundException;
+import com.finzly.bbc.exceptions.custom.payment.CreditCardNotFoundException;
+import com.finzly.bbc.models.payment.Account;
+import com.finzly.bbc.models.payment.CreditCard;
+import com.finzly.bbc.repositories.payment.AccountRepository;
+import com.finzly.bbc.repositories.payment.CreditCardRepository;
+import com.finzly.bbc.utils.EncryptionUtil;
+import com.finzly.bbc.utils.RandomUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+
+@Service
+public class CreditCardService {
+
+    @Autowired
+    private CreditCardRepository creditCardRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Value("${app.encryption.key}")
+    private String encryptionKey;
+
+    // Create a new credit card with required fields
+    public CreditCard createCreditCard (String pin, Long limit, String cvv, LocalDate expiryTime, String accountId) throws Exception {
+        // Find associated account
+        Account account = accountRepository.findById (accountId)
+                .orElseThrow (() -> new AccountNotFoundException ("Account with ID " + accountId + " not found"));
+
+        // Generate random 16-digit card number using RandomUtil
+        String cardNumber = RandomUtil.generateRandomNumericString (16);
+
+        // Encrypt sensitive data
+        String encryptedCardNumber = EncryptionUtil.encrypt (cardNumber, encryptionKey);
+        String encryptedPin = EncryptionUtil.encrypt (pin, encryptionKey);
+        String encryptedCvv = EncryptionUtil.encrypt (cvv, encryptionKey);
+
+        // Create and save credit card
+        CreditCard creditCard = new CreditCard ();
+        creditCard.setNumber (encryptedCardNumber);
+        creditCard.setPin (encryptedPin);
+        creditCard.setCreditLimit (limit);
+        creditCard.setCvv (encryptedCvv);
+        creditCard.setExpiryTime (expiryTime);
+        creditCard.setAccount (account);  // Associate with account
+
+        return creditCardRepository.save (creditCard);
+    }
+
+    // Retrieve credit card by ID
+    public CreditCard getCreditCardById (String id) {
+        return creditCardRepository.findById (id)
+                .orElseThrow (() -> new CreditCardNotFoundException ("Credit card with ID " + id + " not found"));
+    }
+
+    // Retrieve credit card by Number
+    public CreditCard getCreditCardByNumber (String cardNumber) throws Exception {
+        String encryptedCardNumber = EncryptionUtil.encrypt (cardNumber, encryptionKey);
+        return creditCardRepository.findByNumber (encryptedCardNumber)
+                .orElseThrow (() -> new CreditCardNotFoundException ("Credit card with number " + cardNumber + " not found"));
+    }
+
+    // Update credit card details
+    public CreditCard updateCreditCard (String id, CreditCard updatedCreditCard) throws Exception {
+        CreditCard existingCreditCard = creditCardRepository.findById (id)
+                .orElseThrow (() -> new CreditCardNotFoundException ("Credit card with ID " + id + " not found"));
+
+        existingCreditCard.setCreditLimit (updatedCreditCard.getCreditLimit ());
+        existingCreditCard.setExpiryTime (updatedCreditCard.getExpiryTime ());
+        // Add more fields to update here if necessary
+        return creditCardRepository.save (existingCreditCard);
+    }
+
+    // Delete credit card by ID
+    public void deleteCreditCard (String id) {
+        if (!creditCardRepository.existsById (id)) {
+            throw new CreditCardNotFoundException ("Credit card with ID " + id + " not found");
+        }
+        creditCardRepository.deleteById (id);
+    }
+}
+
+

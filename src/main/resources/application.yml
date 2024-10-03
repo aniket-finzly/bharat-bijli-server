@@ -42,3 +42,5 @@ springdoc:
   swagger-ui:
     path: /api-docs/ui
 
+app.encryption.key: ${APP_ENCRYPTION_KEY}
+

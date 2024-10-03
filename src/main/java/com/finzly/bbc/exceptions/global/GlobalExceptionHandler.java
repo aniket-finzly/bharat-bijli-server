@@ -8,6 +8,7 @@ import com.finzly.bbc.exceptions.custom.otp.*;
 import com.finzly.bbc.exceptions.validation.ValidationException;
 import com.finzly.bbc.response.ApiResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -17,59 +18,70 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ApiResponse<Void> handleResourceNotFoundException (ResourceNotFoundException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.NOT_FOUND.value ());
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException (ResourceNotFoundException ex) {
+        return ResponseEntity.status (HttpStatus.NOT_FOUND)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.NOT_FOUND.value ()));
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ApiResponse<Void> handleBadRequestException (BadRequestException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.BAD_REQUEST.value ());
+    public ResponseEntity<ApiResponse<Void>> handleBadRequestException (BadRequestException ex) {
+        return ResponseEntity.status (HttpStatus.BAD_REQUEST)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.BAD_REQUEST.value ()));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ApiResponse<Void> handleUnauthorizedException (UnauthorizedException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.UNAUTHORIZED.value ());
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorizedException (UnauthorizedException ex) {
+        return ResponseEntity.status (HttpStatus.UNAUTHORIZED)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.UNAUTHORIZED.value ()));
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ApiResponse<Void> handleConflictException (ConflictException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.CONFLICT.value ());
+    public ResponseEntity<ApiResponse<Void>> handleConflictException (ConflictException ex) {
+        return ResponseEntity.status (HttpStatus.CONFLICT)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.CONFLICT.value ()));
     }
 
     @ExceptionHandler(ValidationException.class)
-    public ApiResponse<Void> handleValidationException (ValidationException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleValidationException (ValidationException ex) {
         Map<String, String> validationErrors = ex.getValidationErrors ();
-        return ApiResponse.error ("Validation errors: " + validationErrors.toString (), HttpStatus.BAD_REQUEST.value (), validationErrors);
+        return ResponseEntity.status (HttpStatus.BAD_REQUEST)
+                .body (ApiResponse.error ("Validation errors: " + validationErrors.toString (), HttpStatus.BAD_REQUEST.value (), validationErrors));
     }
 
     @ExceptionHandler(Exception.class)
-    public ApiResponse<Void> handleGeneralException (Exception ex) {
-        return ApiResponse.error ("An unexpected error occurred: " + ex.getMessage ());
+    public ResponseEntity<ApiResponse<Void>> handleGeneralException (Exception ex) {
+        return ResponseEntity.status (HttpStatus.INTERNAL_SERVER_ERROR)
+                .body (ApiResponse.error ("An unexpected error occurred: " + ex.getMessage ()));
     }
 
     // OTP exceptions
     @ExceptionHandler(OtpNotFoundException.class)
-    public ApiResponse<Void> handleOtpNotFoundException (OtpNotFoundException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.NOT_FOUND.value ());
+    public ResponseEntity<ApiResponse<Void>> handleOtpNotFoundException (OtpNotFoundException ex) {
+        return ResponseEntity.status (HttpStatus.NOT_FOUND)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.NOT_FOUND.value ()));
     }
 
     @ExceptionHandler(OtpExpiredException.class)
-    public ApiResponse<Void> handleOtpExpiredException (OtpExpiredException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.GONE.value ());
+    public ResponseEntity<ApiResponse<Void>> handleOtpExpiredException (OtpExpiredException ex) {
+        return ResponseEntity.status (HttpStatus.GONE)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.GONE.value ()));
     }
 
     @ExceptionHandler(OtpAttemptLimitExceededException.class)
-    public ApiResponse<Void> handleOtpAttemptLimitExceededException (OtpAttemptLimitExceededException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.TOO_MANY_REQUESTS.value ());
+    public ResponseEntity<ApiResponse<Void>> handleOtpAttemptLimitExceededException (OtpAttemptLimitExceededException ex) {
+        return ResponseEntity.status (HttpStatus.TOO_MANY_REQUESTS)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.TOO_MANY_REQUESTS.value ()));
     }
 
     @ExceptionHandler(OtpGenerationException.class)
-    public ApiResponse<Void> handleOtpGenerationException (OtpGenerationException ex) {
-        return ApiResponse.error ("Failed to generate OTP: " + ex.getMessage ());
+    public ResponseEntity<ApiResponse<Void>> handleOtpGenerationException (OtpGenerationException ex) {
+        return ResponseEntity.status (HttpStatus.INTERNAL_SERVER_ERROR)
+                .body (ApiResponse.error ("Failed to generate OTP: " + ex.getMessage ()));
     }
 
     @ExceptionHandler(InvalidOtpException.class)
-    public ApiResponse<Void> handleInvalidOtpException (InvalidOtpException ex) {
-        return ApiResponse.error (ex.getMessage (), HttpStatus.BAD_REQUEST.value ());
+    public ResponseEntity<ApiResponse<Void>> handleInvalidOtpException (InvalidOtpException ex) {
+        return ResponseEntity.status (HttpStatus.BAD_REQUEST)
+                .body (ApiResponse.error (ex.getMessage (), HttpStatus.BAD_REQUEST.value ()));
     }
 }
