@@ -1,6 +1,6 @@
 package com.finzly.bbc.configs;
 
-import com.finzly.bbc.filters.JwtFilter;
+import com.finzly.bbc.filters.JwtRequestFilter;
 import com.finzly.bbc.services.auth.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +24,7 @@ public class SpringSecurity {
     private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    private JwtFilter jwtFilter;
+    private JwtRequestFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain (HttpSecurity http) throws Exception {
@@ -38,7 +38,8 @@ public class SpringSecurity {
                 })).
                 authorizeHttpRequests (request -> request
                         .requestMatchers ("/auth/otp/**", "/api-docs/**").permitAll ()
-                        .anyRequest ().permitAll ())
+                        .requestMatchers ("/api/auth/customers/**").hasAnyRole ("ADMIN", "EMPLOYEE")
+                        .anyRequest ().authenticated ())
                 .csrf (AbstractHttpConfigurer::disable)
                 .addFilterBefore (jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build ();

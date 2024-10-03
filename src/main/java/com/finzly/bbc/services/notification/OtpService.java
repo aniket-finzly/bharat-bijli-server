@@ -245,10 +245,7 @@ public class OtpService {
         }
 
         otpRepository.delete (otp);
-        return jwtUtil.generateToken (userType.equals ("CUSTOMER") ?
-                        ((Customer) entity).getCustomerId () :
-                        ((Employee) entity).getEmployeeId (),
-                null, userType);
+        return jwtUtil.generateToken (entity);
     }
 
     private void sendOtpEmail (String email, String otpCode) {
