@@ -1,5 +1,6 @@
 package com.finzly.bbc.models.auth;
 
+import com.finzly.bbc.utils.RandomUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -22,7 +23,6 @@ public class User {
 
     @Id
     @Column(nullable = false, unique = true)
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Email(message = "Email should be valid")
@@ -30,13 +30,16 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @NotBlank(message = "First name is mandatory")
     private String firstName;
+
+    @NotBlank(message = "Last name is mandatory")
     private String lastName;
 
     @NotBlank(message = "Phone number is mandatory")
     private String phoneNumber;
 
-    private boolean isAdmin;
+    private boolean isAdmin = false;
 
     // User can be either employee or customer or both
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -51,4 +54,12 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    public void onCreate () {
+        this.id = generateUserId ();
+    }
+
+    public String generateUserId () {
+        return "USR" + RandomUtil.generateRandomNumericString (7);
+    }
 }

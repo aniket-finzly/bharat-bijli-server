@@ -80,7 +80,12 @@ public class JwtUtil {
                 fieldsMap.put ("email", user.getEmail ());
                 fieldsMap.put ("phoneNumber", user.getPhoneNumber ());
                 fieldsMap.put ("userId", user.getId ());
-                fieldsMap.put ("role", "ADMIN");
+
+                if (user.isAdmin ()) {
+                    fieldsMap.put ("role", "ADMIN");
+                } else {
+                    fieldsMap.put ("role", "CUSTOMER");
+                }
             }
             default -> {
                 log.warn ("Unknown entity type: {}", entity.getClass ().getName ());
