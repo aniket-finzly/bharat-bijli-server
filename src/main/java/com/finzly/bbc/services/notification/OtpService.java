@@ -1,8 +1,6 @@
 package com.finzly.bbc.services.notification;
 
-import com.finzly.bbc.exceptions.custom.otp.InvalidOtpException;
-import com.finzly.bbc.exceptions.custom.otp.OtpAttemptLimitExceededException;
-import com.finzly.bbc.exceptions.custom.otp.OtpExpiredException;
+import com.finzly.bbc.exceptions.*;
 import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.auth.Employee;
 import com.finzly.bbc.models.notification.OTP;
@@ -39,17 +37,13 @@ public class OtpService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    /**
-     * Generate a new OTP for a user
-     */
     public void generateOtp (String userId) {
         if (userId.startsWith ("CST")) {
             generateOtpForCustomer (userId);
         } else if (userId.startsWith ("EMP")) {
             generateOtpForEmployee (userId);
         } else {
-            log.error ("Invalid user ID prefix: {}", userId);
-            throw new IllegalArgumentException ("Invalid user ID prefix: " + userId);
+            throw new BadRequestException ("Invalid user ID");
         }
     }
 
@@ -62,14 +56,12 @@ public class OtpService {
             // Check if an existing OTP is valid
             if (otp != null) {
                 if (!otp.isExpired () && !otp.isAttemptLimitExceeded ()) {
-                    log.warn ("An OTP is already valid for customer: {}", userId);
-                    throw new IllegalStateException ("An OTP is already valid. Please wait for it to expire or try resending it.");
+                    throw new ConflictException ("An OTP is already valid for customer: " + userId);
                 } else if (otp.isExpired ()) {
                     otp.setOtpAttemptCount (0);
                     otpRepository.save (otp);
                 } else if (otp.isAttemptLimitExceeded ()) {
-                    log.warn ("OTP attempt limit exceeded for customer: {}", userId);
-                    throw new OtpAttemptLimitExceededException ("Limit exceeded. Please wait before trying to regenerate the OTP.");
+                    throw new TooManyRequestsException ("OTP attempt limit exceeded for customer: " + userId);
                 }
             }
 
@@ -78,10 +70,8 @@ public class OtpService {
             otp.generateOtp ();
             saveOtpForEntity (otp, customer);
             sendOtpEmail (customer.getUser ().getEmail (), otp.getOtp ());
-            log.info ("OTP generated for customer: {}", userId);
         } else {
-            log.error ("Customer not found for userId: {}", userId);
-            throw new IllegalArgumentException ("Customer not found for userId: " + userId);
+            throw new ResourceNotFoundException ("Customer not found with ID: " + userId);
         }
     }
 
@@ -95,13 +85,13 @@ public class OtpService {
             if (otp != null) {
                 if (!otp.isExpired () && !otp.isAttemptLimitExceeded ()) {
                     log.warn ("An OTP is already valid for employee: {}", userId);
-                    throw new IllegalStateException ("An OTP is already valid. Please wait for it to expire or try resending it.");
+                    throw new ConflictException ("An OTP is already valid for employee: " + userId);
                 } else if (otp.isExpired ()) {
                     otp.setOtpAttemptCount (0);
                     otpRepository.save (otp);
                 } else if (otp.isAttemptLimitExceeded ()) {
                     log.warn ("OTP attempt limit exceeded for employee: {}", userId);
-                    throw new OtpAttemptLimitExceededException ("Limit exceeded. Please wait before trying to regenerate the OTP.");
+                    throw new TooManyRequestsException ("OTP attempt limit exceeded for employee: " + userId);
                 }
             }
 
@@ -112,23 +102,17 @@ public class OtpService {
             sendOtpEmail (employee.getUser ().getEmail (), otp.getOtp ());
             log.info ("OTP generated for employee: {}", userId);
         } else {
-            log.error ("Employee not found for userId: {}", userId);
-            throw new IllegalArgumentException ("Employee not found for userId: " + userId);
+            throw new ResourceNotFoundException ("Employee not found with ID: " + userId);
         }
     }
 
-
-    /**
-     * Resend an OTP for a user, either reuse if valid or regenerate if expired.
-     */
     public void resendOtp (String userId) {
         if (userId.startsWith ("CST")) {
             resendOtpForCustomer (userId);
         } else if (userId.startsWith ("EMP")) {
             resendOtpForEmployee (userId);
         } else {
-            log.error ("Invalid user ID prefix: {}", userId);
-            throw new IllegalArgumentException ("Invalid user ID prefix: " + userId);
+            throw new BadRequestException ("Invalid user ID");
         }
     }
 
@@ -138,8 +122,7 @@ public class OtpService {
             Customer customer = customerOptional.get ();
             resendOrGenerateOtp (customer.getOtp (), customer.getUser ().getEmail (), customer);
         } else {
-            log.error ("Customer not found for userId: {}", userId);
-            throw new IllegalArgumentException ("Customer not found for userId: " + userId);
+            throw new ResourceNotFoundException ("Customer not found for userId: " + userId);
         }
     }
 
@@ -149,8 +132,7 @@ public class OtpService {
             Employee employee = employeeOptional.get ();
             resendOrGenerateOtp (employee.getOtp (), employee.getUser ().getEmail (), employee);
         } else {
-            log.error ("Employee not found for userId: {}", userId);
-            throw new IllegalArgumentException ("Employee not found for userId: " + userId);
+            throw new ResourceNotFoundException ("Employee not found for userId: " + userId);
         }
     }
 
@@ -169,8 +151,7 @@ public class OtpService {
             otp.setCreatedAt (now);
             otp.setExpiresAt (now.plusMinutes (5));
         } else {
-            log.warn ("OTP attempt limit exceeded for email: {}", email);
-            throw new OtpAttemptLimitExceededException ("Limit exceeded. Please wait before trying to regenerate the OTP.");
+            throw new TooManyRequestsException ("OTP attempt limit exceeded for user: " + email);
         }
 
         otpRepository.save (otp);
@@ -179,17 +160,13 @@ public class OtpService {
         log.info ("OTP resent to email: {}", email);
     }
 
-    /**
-     * Verify the provided OTP for a user
-     */
     public String verifyOtp (String userId, String otpCode) {
         if (userId.startsWith ("CST")) {
             return verifyOtpForCustomer (userId, otpCode);
         } else if (userId.startsWith ("EMP")) {
             return verifyOtpForEmployee (userId, otpCode);
         } else {
-            log.error ("Invalid user ID: {}", userId);
-            throw new IllegalArgumentException ("Invalid user ID: " + userId);
+            throw new BadRequestException ("Invalid user ID");
         }
     }
 
@@ -199,8 +176,7 @@ public class OtpService {
             Customer customer = customerOptional.get ();
             return verifyOtpCommon (customer.getOtp (), otpCode, customer, "CUSTOMER");
         } else {
-            log.error ("Customer not found for userId: {}", userId);
-            throw new IllegalArgumentException ("Invalid user ID: " + userId);
+            throw new ResourceNotFoundException ("Customer not found for userId: " + userId);
         }
     }
 
@@ -210,50 +186,56 @@ public class OtpService {
             Employee employee = employeeOptional.get ();
             return verifyOtpCommon (employee.getOtp (), otpCode, employee, "EMPLOYEE");
         } else {
-            log.error ("Employee not found for userId: {}", userId);
-            throw new IllegalArgumentException ("Invalid user ID: " + userId);
+            throw new ResourceNotFoundException ("Employee not found for userId: " + userId);
         }
     }
 
-    private String verifyOtpCommon (OTP otp, String otpCode, Object entity, String userType) {
-        if (otp == null || !otp.isValidOtp ()) {
-            log.warn ("Invalid OTP for user: {}", userType);
-            throw new InvalidOtpException ("Invalid OTP. Please try again.");
-        }
-        if (otp.isExpired ()) {
-            log.warn ("OTP expired for user: {}", userType);
-            throw new OtpExpiredException ("OTP expired. Please try again.");
-        }
-        if (!otpCode.equals (otp.getOtp ())) {
-            otp.setOtpAttemptCount (otp.getOtpAttemptCount () + 1);
-            otpRepository.save (otp);
-            log.warn ("Invalid OTP entered for user: {}", userType);
-            throw new InvalidOtpException ("Invalid OTP. Please try again.");
-        }
-        if (otp.isAttemptLimitExceeded ()) {
-            log.warn ("OTP attempt limit exceeded for user: {}", userType);
-            throw new OtpAttemptLimitExceededException ("Limit exceeded. Please try again later.");
-        }
+    private String verifyOtpCommon(OTP otp, String otpCode, Object entity, String userType) {
+        validateOtp(otp, otpCode, userType);
+        clearOtpForEntity(entity);
+        otpRepository.delete(otp);
+        return jwtUtil.generateToken(entity);
+    }
 
-        // OTP is valid
+    private void validateOtp(OTP otp, String otpCode, String userType) {
+        if (otp == null) {
+            throw new BadRequestException("OTP does not exist.");
+        }
+        if (!otp.isValidOtp()) {
+            throw new BadRequestException("Invalid OTP. Please try again.");
+        }
+        if (otp.isExpired()) {
+            throw new BadRequestException("OTP expired. Please try again.");
+        }
+        if (!otpCode.equals(otp.getOtp())) {
+            handleInvalidOtpAttempt(otp, userType);
+        }
+        if (otp.isAttemptLimitExceeded()) {
+            throw new TooManyRequestsException("OTP attempt limit exceeded for user: " + userType);
+        }
+    }
+
+    private void handleInvalidOtpAttempt(OTP otp, String userType) {
+        otp.setOtpAttemptCount(otp.getOtpAttemptCount() + 1);
+        otpRepository.save(otp);
+        throw new BadRequestException("Invalid OTP for user: " + userType + ". Please try again.");
+    }
+
+    private void clearOtpForEntity(Object entity) {
         if (entity instanceof Customer) {
-            ((Customer) entity).setOtp (null);
-            customerRepository.save ((Customer) entity);
+            ((Customer) entity).setOtp(null);
+            customerRepository.save((Customer) entity);
         } else if (entity instanceof Employee) {
-            ((Employee) entity).setOtp (null);
-            employeeRepository.save ((Employee) entity);
+            ((Employee) entity).setOtp(null);
+            employeeRepository.save((Employee) entity);
         }
-
-        otpRepository.delete (otp);
-        return jwtUtil.generateToken (entity);
     }
 
     private void sendOtpEmail (String email, String otpCode) {
         try {
             emailService.sendOtpEmail (email, otpCode);
         } catch (Exception e) {
-            log.error ("Failed to send OTP email to {}: {}", email, e.getMessage ());
-            throw new RuntimeException ("Error sending OTP email. Please try again.");
+            throw new InternalServerErrorException ("Failed to send OTP email to " + email);
         }
     }
 

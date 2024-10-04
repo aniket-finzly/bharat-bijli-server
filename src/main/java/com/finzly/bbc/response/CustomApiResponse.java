@@ -52,8 +52,28 @@ public class CustomApiResponse<T> {
         return new CustomApiResponse<>("error", message, statusCode, errors);
     }
 
-    public static <T> CustomApiResponse<T> success(String message, T data) {
-        return new CustomApiResponse<>("success", message, data);
+    public static <T> CustomApiResponse<T> success(String message, T data, int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<>("success", message, data);
+        response.setStatusCode(statusCode); // Set custom status code
+        return response;
+    }
+
+    public static <T> CustomApiResponse<T> success(String message, int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<>("success", message, null);
+        response.setStatusCode(statusCode); // Set custom status code
+        return response;
+    }
+
+    public static <T> CustomApiResponse<T> success(T data, int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<>("success", "Request was successful.", data);
+        response.setStatusCode(statusCode); // Set custom status code
+        return response;
+    }
+
+    public static <T> CustomApiResponse<T> success(int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<>("success", "Request was successful.", null);
+        response.setStatusCode(statusCode); // Set custom status code
+        return response;
     }
 
     private static String getCurrentPath() {
