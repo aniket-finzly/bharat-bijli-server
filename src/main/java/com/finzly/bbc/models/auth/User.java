@@ -39,6 +39,7 @@ public class User {
     @NotBlank(message = "Phone number is mandatory")
     private String phoneNumber;
 
+    @Builder.Default
     private boolean isAdmin = false;
 
     // User can be either employee or customer or both

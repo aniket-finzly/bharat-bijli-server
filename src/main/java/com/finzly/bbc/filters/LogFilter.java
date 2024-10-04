@@ -13,7 +13,7 @@ import java.io.IOException;
 
 @Slf4j
 @Component
-public class CustomRequestResponseLoggingFilter extends OncePerRequestFilter {
+public class LogFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal (HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

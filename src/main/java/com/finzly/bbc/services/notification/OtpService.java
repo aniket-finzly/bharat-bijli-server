@@ -190,44 +190,44 @@ public class OtpService {
         }
     }
 
-    private String verifyOtpCommon(OTP otp, String otpCode, Object entity, String userType) {
-        validateOtp(otp, otpCode, userType);
-        clearOtpForEntity(entity);
-        otpRepository.delete(otp);
-        return jwtUtil.generateToken(entity);
+    private String verifyOtpCommon (OTP otp, String otpCode, Object entity, String userType) {
+        validateOtp (otp, otpCode, userType);
+        clearOtpForEntity (entity);
+        otpRepository.delete (otp);
+        return jwtUtil.generateToken (entity);
     }
 
-    private void validateOtp(OTP otp, String otpCode, String userType) {
+    private void validateOtp (OTP otp, String otpCode, String userType) {
         if (otp == null) {
-            throw new BadRequestException("OTP does not exist.");
+            throw new BadRequestException ("OTP does not exist.");
         }
-        if (!otp.isValidOtp()) {
-            throw new BadRequestException("Invalid OTP. Please try again.");
+        if (!otp.isValidOtp ()) {
+            throw new BadRequestException ("Invalid OTP. Please try again.");
         }
-        if (otp.isExpired()) {
-            throw new BadRequestException("OTP expired. Please try again.");
+        if (otp.isExpired ()) {
+            throw new BadRequestException ("OTP expired. Please try again.");
         }
-        if (!otpCode.equals(otp.getOtp())) {
-            handleInvalidOtpAttempt(otp, userType);
+        if (!otpCode.equals (otp.getOtp ())) {
+            handleInvalidOtpAttempt (otp, userType);
         }
-        if (otp.isAttemptLimitExceeded()) {
-            throw new TooManyRequestsException("OTP attempt limit exceeded for user: " + userType);
+        if (otp.isAttemptLimitExceeded ()) {
+            throw new TooManyRequestsException ("OTP attempt limit exceeded for user: " + userType);
         }
     }
 
-    private void handleInvalidOtpAttempt(OTP otp, String userType) {
-        otp.setOtpAttemptCount(otp.getOtpAttemptCount() + 1);
-        otpRepository.save(otp);
-        throw new BadRequestException("Invalid OTP for user: " + userType + ". Please try again.");
+    private void handleInvalidOtpAttempt (OTP otp, String userType) {
+        otp.setOtpAttemptCount (otp.getOtpAttemptCount () + 1);
+        otpRepository.save (otp);
+        throw new BadRequestException ("Invalid OTP for user: " + userType + ". Please try again.");
     }
 
-    private void clearOtpForEntity(Object entity) {
+    private void clearOtpForEntity (Object entity) {
         if (entity instanceof Customer) {
-            ((Customer) entity).setOtp(null);
-            customerRepository.save((Customer) entity);
+            ((Customer) entity).setOtp (null);
+            customerRepository.save ((Customer) entity);
         } else if (entity instanceof Employee) {
-            ((Employee) entity).setOtp(null);
-            employeeRepository.save((Employee) entity);
+            ((Employee) entity).setOtp (null);
+            employeeRepository.save ((Employee) entity);
         }
     }
 

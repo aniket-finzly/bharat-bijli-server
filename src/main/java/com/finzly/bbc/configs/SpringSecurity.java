@@ -1,7 +1,6 @@
 package com.finzly.bbc.configs;
 
 import com.finzly.bbc.filters.JwtRequestFilter;
-import com.finzly.bbc.services.auth.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +18,6 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SpringSecurity {
-
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
     private JwtRequestFilter jwtFilter;

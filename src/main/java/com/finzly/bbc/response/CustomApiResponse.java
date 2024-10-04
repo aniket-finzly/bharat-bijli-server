@@ -21,63 +21,63 @@ public class CustomApiResponse<T> {
     private Object errors;
     private long timestamp;
 
-    public CustomApiResponse(String status, String message, T data) {
+    public CustomApiResponse (String status, String message, T data) {
         this.status = status;
         this.message = message;
         this.data = data;
-        this.path = getCurrentPath();
+        this.path = getCurrentPath ();
         this.statusCode = 200;
-        this.timestamp = System.currentTimeMillis();
+        this.timestamp = System.currentTimeMillis ();
     }
 
-    public CustomApiResponse(String status, String message, int statusCode, Object errors) {
+    public CustomApiResponse (String status, String message, int statusCode, Object errors) {
         this.status = status;
         this.message = message;
         this.data = null;
-        this.path = getCurrentPath();
+        this.path = getCurrentPath ();
         this.statusCode = statusCode;
         this.errors = errors;
-        this.timestamp = System.currentTimeMillis();
+        this.timestamp = System.currentTimeMillis ();
     }
 
-    public static <T> CustomApiResponse<T> error(String message) {
-        return error(message, 500, null);
+    public static <T> CustomApiResponse<T> error (String message) {
+        return error (message, 500, null);
     }
 
-    public static <T> CustomApiResponse<T> error(String message, int statusCode) {
-        return error(message, statusCode, null);
+    public static <T> CustomApiResponse<T> error (String message, int statusCode) {
+        return error (message, statusCode, null);
     }
 
-    public static <T> CustomApiResponse<T> error(String message, int statusCode, Object errors) {
-        return new CustomApiResponse<>("error", message, statusCode, errors);
+    public static <T> CustomApiResponse<T> error (String message, int statusCode, Object errors) {
+        return new CustomApiResponse<> ("error", message, statusCode, errors);
     }
 
-    public static <T> CustomApiResponse<T> success(String message, T data, int statusCode) {
-        CustomApiResponse<T> response = new CustomApiResponse<>("success", message, data);
-        response.setStatusCode(statusCode); // Set custom status code
+    public static <T> CustomApiResponse<T> success (String message, T data, int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<> ("success", message, data);
+        response.setStatusCode (statusCode); // Set custom status code
         return response;
     }
 
-    public static <T> CustomApiResponse<T> success(String message, int statusCode) {
-        CustomApiResponse<T> response = new CustomApiResponse<>("success", message, null);
-        response.setStatusCode(statusCode); // Set custom status code
+    public static <T> CustomApiResponse<T> success (String message, int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<> ("success", message, null);
+        response.setStatusCode (statusCode); // Set custom status code
         return response;
     }
 
-    public static <T> CustomApiResponse<T> success(T data, int statusCode) {
-        CustomApiResponse<T> response = new CustomApiResponse<>("success", "Request was successful.", data);
-        response.setStatusCode(statusCode); // Set custom status code
+    public static <T> CustomApiResponse<T> success (T data, int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<> ("success", "Request was successful.", data);
+        response.setStatusCode (statusCode); // Set custom status code
         return response;
     }
 
-    public static <T> CustomApiResponse<T> success(int statusCode) {
-        CustomApiResponse<T> response = new CustomApiResponse<>("success", "Request was successful.", null);
-        response.setStatusCode(statusCode); // Set custom status code
+    public static <T> CustomApiResponse<T> success (int statusCode) {
+        CustomApiResponse<T> response = new CustomApiResponse<> ("success", "Request was successful.", null);
+        response.setStatusCode (statusCode); // Set custom status code
         return response;
     }
 
-    private static String getCurrentPath() {
-        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
-        return request.getRequestURI();
+    private static String getCurrentPath () {
+        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull (RequestContextHolder.getRequestAttributes ())).getRequest ();
+        return request.getRequestURI ();
     }
 }

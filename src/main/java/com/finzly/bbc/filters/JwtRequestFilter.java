@@ -15,7 +15,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-
 import java.io.IOException;
 import java.util.List;
 
@@ -26,30 +25,30 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal( HttpServletRequest request, @NonNull HttpServletResponse response,@NonNull FilterChain filterChain)
+    protected void doFilterInternal (HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authorizationHeader = request.getHeader("Authorization");
+        final String authorizationHeader = request.getHeader ("Authorization");
 
         String userId = null;
         String jwt = null;
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            userId = jwtUtil.getAllClaims(jwt).get("userId").toString();
+        if (authorizationHeader != null && authorizationHeader.startsWith ("Bearer ")) {
+            jwt = authorizationHeader.substring (7);
+            userId = jwtUtil.getAllClaims (jwt).get ("userId").toString ();
         }
 
-        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtUtil.validateToken(jwt, userId)) {
-                String role = jwtUtil.getRole(jwt);
-                UserDetails userDetails = new org.springframework.security.core.userdetails.User(userId, "",
-                        List.of(new SimpleGrantedAuthority ("ROLE_" + role)));  // Add roles with "ROLE_" prefix
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (userId != null && SecurityContextHolder.getContext ().getAuthentication () == null) {
+            if (jwtUtil.validateToken (jwt, userId)) {
+                String role = jwtUtil.getRole (jwt);
+                UserDetails userDetails = new org.springframework.security.core.userdetails.User (userId, "",
+                        List.of (new SimpleGrantedAuthority ("ROLE_" + role)));  // Add roles with "ROLE_" prefix
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken (userDetails, null, userDetails.getAuthorities ());
+                authentication.setDetails (new WebAuthenticationDetailsSource ().buildDetails (request));
+                SecurityContextHolder.getContext ().setAuthentication (authentication);
             }
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter (request, response);
     }
 }
