@@ -34,7 +34,7 @@ public class SpringSecurity {
                 })).
                 authorizeHttpRequests (request -> request
                         .requestMatchers ("/auth/otp/**", "/api-docs/**").permitAll ()
-                        .requestMatchers ("/api/auth/customers/**").hasAnyRole ("ADMIN", "EMPLOYEE")
+                        .requestMatchers ("/api/auth/customers/**").fullyAuthenticated ()
                         .anyRequest ().authenticated ())
                 .csrf (AbstractHttpConfigurer::disable)
                 .addFilterBefore (jwtFilter, UsernamePasswordAuthenticationFilter.class)

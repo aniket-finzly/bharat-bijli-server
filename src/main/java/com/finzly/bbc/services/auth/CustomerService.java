@@ -1,81 +1,185 @@
 package com.finzly.bbc.services.auth;
 
+import com.finzly.bbc.dtos.auth.*;
+import com.finzly.bbc.dtos.common.PaginationRequest;
+import com.finzly.bbc.dtos.common.PaginationResponse;
+import com.finzly.bbc.exceptions.BadRequestException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
+import com.finzly.bbc.models.auth.Customer;
+import com.finzly.bbc.models.auth.User;
+import com.finzly.bbc.repositories.auth.CustomerRepository;
+import com.finzly.bbc.repositories.auth.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class CustomerService {
-//
-//    @Autowired
-//    private CustomerRepository customerRepository;
-//
-//    @Autowired
-//    private UserRepository userRepository;
-//
-//    @Autowired
-//    private UserService userService;
-//
-//    // Create a new customer from a CustomerDTO
-//    public CustomerDTO createCustomer (CustomerDTO customerDTO) {
-//        Customer customer = CustomerMapper.toEntity (customerDTO);
-//        // Generate and set customerId using the prePersist method
-//        Customer createdCustomer = customerRepository.save (customer);
-//        return CustomerMapper.toDTO (createdCustomer);
-//    }
-//
-//    // Create a customer with user details from a UserCustomerCreationDTO
-//    public CustomerDTO createCustomerWithUserDetails (UserCustomerCreationDTO userCustomerCreationDTO) {
-//        User user = UserCustomerCreationMapper.toUser (userCustomerCreationDTO);
-//        User createdUser = userService.createUser (user);
-//
-//        // Create the customer with the newly created user
-//        Customer customer = UserCustomerCreationMapper.toCustomer (userCustomerCreationDTO, createdUser);
-//        Customer createdCustomer = customerRepository.save (customer);
-//        return CustomerMapper.toDTO (createdCustomer);
-//    }
-//
-//    // Retrieve a customer by their ID
-//    public CustomerDTO getCustomerById (String customerId) {
-//        Customer customer = customerRepository.findById (customerId)
-//                .orElseThrow (() -> new RuntimeException ("Customer not found"));
-//        return CustomerMapper.toDTO (customer);
-//    }
-//
-//    // Retrieve all customers
-//    public List<CustomerDTO> getAllCustomers () {
-//        List<Customer> customers = customerRepository.findAll ();
-//        return customers.stream ()
-//                .map (CustomerMapper::toDTO)
-//                .collect (Collectors.toList ());
-//    }
-//
-//    // Update an existing customer by their ID
-//    public CustomerDTO updateCustomer (String customerId, CustomerDTO customerDTO) {
-//        // Retrieve the existing customer
-//        Customer existingCustomer = customerRepository.findById (customerId)
-//                .orElseThrow (() -> new RuntimeException ("Customer not found"));
-//
-//        // Update fields from the DTO
-//        existingCustomer.setAddress (customerDTO.getAddress ());
-//        // Add other fields as necessary
-//
-//        // Save the updated customer
-//        Customer updatedCustomer = customerRepository.save (existingCustomer);
-//        return CustomerMapper.toDTO (updatedCustomer);
-//    }
-//
-//    // Delete a customer by their ID
-//    public void deleteCustomer (String customerId) {
-//        // Delete the customer
-//        Customer customer = customerRepository.findById (customerId)
-//                .orElseThrow (() -> new RuntimeException ("Customer not found"));
-//        customerRepository.delete (customer);
-//    }
-//
-//    // Search for customers based on provided parameters
-//    public List<CustomerDTO> searchCustomers (String userId, String email, String phoneNumber, Boolean isAdmin) {
-//        List<Customer> customers = customerRepository.searchCustomers (userId, email, phoneNumber, isAdmin);
-//        return customers.stream ()
-//                .map (CustomerMapper::toDTO)
-//                .collect (Collectors.toList ());
-//    }
+
+    private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
+    private final UserService userService;
+
+    private static User getUser (UserCustomerRequest userCustomerRequest, Customer customer) {
+        User user = customer.getUser ();
+        if (userCustomerRequest.getEmail () != null) {
+            user.setEmail (userCustomerRequest.getEmail ());
+        }
+        if (userCustomerRequest.getPhoneNumber () != null) {
+            user.setPhoneNumber (userCustomerRequest.getPhoneNumber ());
+        }
+        if (userCustomerRequest.getFirstName () != null) {
+            user.setFirstName (userCustomerRequest.getFirstName ());
+        }
+        if (userCustomerRequest.getLastName () != null) {
+            user.setLastName (userCustomerRequest.getLastName ());
+        }
+        return user;
+    }
+
+    // Create a new customer
+    public UserCustomerResponse createCustomer (CustomerRequest customerRequest) {
+        if (customerRequest.getUserId () == null || customerRequest.getUserId ().isEmpty ()) {
+            throw new BadRequestException ("User ID is mandatory.");
+        }
+
+        User user = userRepository.findById (customerRequest.getUserId ())
+                .orElseThrow (() -> new ResourceNotFoundException ("User not found with ID: " + customerRequest.getUserId ()));
+
+        Customer customer = modelMapper.map (customerRequest, Customer.class);
+        customer.setUser (user);
+
+        Customer savedCustomer = customerRepository.save (customer);
+
+        return mapToUserCustomerResponse (savedCustomer);
+    }
+
+    // Add customer with user details
+    public UserCustomerResponse addCustomerWithUserDetails (UserCustomerRequest userCustomerRequest) {
+        validateUserCustomerRequest (userCustomerRequest);
+
+        UserRequest userRequest = modelMapper.map (userCustomerRequest, UserRequest.class);
+        // Create user to get user ID
+        UserResponse userResponse = userService.createUser (userRequest);
+
+        String userId = userResponse.getId ();
+
+        CustomerRequest customerRequest = new CustomerRequest ();
+        customerRequest.setUserId (userId);
+        customerRequest.setAddress (userCustomerRequest.getAddress ());
+
+        // Directly return the response from createCustomer
+        return createCustomer (customerRequest);
+    }
+
+    // Get customer by ID
+    public UserCustomerResponse getCustomerById (String customerId) {
+        Customer customer = customerRepository.findById (customerId)
+                .orElseThrow (() -> new ResourceNotFoundException ("Customer not found with ID: " + customerId));
+
+        return mapToUserCustomerResponse (customer);
+    }
+
+    // Update user and customer details
+    public UserCustomerResponse updateUserCustomer (String customerId, UserCustomerRequest userCustomerRequest) {
+        // Find the customer by ID
+        Customer customer = customerRepository.findById (customerId)
+                .orElseThrow (() -> new ResourceNotFoundException ("Customer not found with ID: " + customerId));
+
+        // Update user details
+        var user = getUser (userCustomerRequest, customer);
+        userRepository.save (user); // Save updated user
+
+        // Update customer details
+        if (userCustomerRequest.getAddress () != null) {
+            customer.setAddress (userCustomerRequest.getAddress ());
+        }
+        Customer updatedCustomer = customerRepository.save (customer); // Save updated customer
+
+        return mapToUserCustomerResponse (updatedCustomer);
+    }
+
+    // Delete customer
+    public void deleteCustomer (String customerId) {
+        Customer customer = customerRepository.findById (customerId)
+                .orElseThrow (() -> new ResourceNotFoundException ("Customer not found with ID: " + customerId));
+
+        if (customer.getUser ().getEmployee () == null) {
+            userRepository.delete (customer.getUser ());
+            customerRepository.delete (customer);
+        } else {
+            User user = customer.getUser ();
+            user.setCustomer (null);
+            userRepository.save (user);
+            customerRepository.delete (customer);
+        }
+    }
+
+    // Search customers with user details and pagination
+    public PaginationResponse<UserCustomerResponse> searchCustomersWithPagination (
+            PaginationRequest paginationRequest,
+            String firstName,
+            String lastName,
+            String email
+    ) {
+        Pageable pageable = PageRequest.of (
+                paginationRequest.getPage (),
+                paginationRequest.getSize ()
+        );
+
+        Page<Customer> customerPage = customerRepository.searchCustomersWithUserDetails (firstName, lastName, email, pageable);
+
+        List<UserCustomerResponse> customerResponses = customerPage.getContent ().stream ()
+                .map (this::mapToUserCustomerResponse)
+                .toList ();
+
+        return PaginationResponse.<UserCustomerResponse>builder ()
+                .content (customerResponses)
+                .totalPages (customerPage.getTotalPages ())
+                .totalElements (customerPage.getTotalElements ())
+                .size (customerPage.getSize ())
+                .number (customerPage.getNumber ())
+                .build ();
+    }
+
+
+    // Helper method to map Customer to UserCustomerResponse
+    private UserCustomerResponse mapToUserCustomerResponse (Customer customer) {
+        User user = customer.getUser ();
+        return UserCustomerResponse.builder ()
+                .userId (user.getId ())
+                .customerId (customer.getCustomerId ())
+                .firstName (user.getFirstName ())
+                .lastName (user.getLastName ())
+                .email (user.getEmail ())
+                .phoneNumber (user.getPhoneNumber ())
+                .address (customer.getAddress ())
+                .build ();
+    }
+
+    // Helper method to validate user customer request
+    private void validateUserCustomerRequest (UserCustomerRequest userCustomerRequest) {
+        if (userCustomerRequest.getPhoneNumber () == null || userCustomerRequest.getPhoneNumber ().isEmpty ()) {
+            throw new BadRequestException ("Phone number is mandatory.");
+        }
+
+        if (userCustomerRequest.getEmail () == null || userCustomerRequest.getEmail ().isEmpty ()) {
+            throw new BadRequestException ("Email is mandatory.");
+        }
+
+        if (userCustomerRequest.getFirstName () == null || userCustomerRequest.getFirstName ().isEmpty ()) {
+            throw new BadRequestException ("First name is mandatory.");
+        }
+
+        if (userCustomerRequest.getLastName () == null || userCustomerRequest.getLastName ().isEmpty ()) {
+            throw new BadRequestException ("Last name is mandatory.");
+        }
+    }
 }

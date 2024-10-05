@@ -2,6 +2,7 @@ package com.finzly.bbc.exceptions;
 
 import com.finzly.bbc.response.CustomApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -79,6 +80,13 @@ public class GlobalExceptionHandler {
                 CustomApiResponse.error (ex.getMessage (), HttpStatus.CONFLICT.value ()),
                 HttpStatus.CONFLICT
         );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<CustomApiResponse<String>> handleDataIntegrityViolationException (DataIntegrityViolationException ex) {
+        String errorMessage = "Duplicate entry detected. Please ensure unique fields are not repeated.";
+        return ResponseEntity.status (HttpStatus.CONFLICT)
+                .body (CustomApiResponse.error (errorMessage, HttpStatus.CONFLICT.value ()));
     }
 
     //  415 Unsupported Media Type

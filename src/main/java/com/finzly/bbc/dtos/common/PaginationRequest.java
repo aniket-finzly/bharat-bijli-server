@@ -1,14 +1,19 @@
 package com.finzly.bbc.dtos.common;
 
+import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class PaginationRequest {
 
-    private Integer page = 0;  // Default to 0
-    private Integer size = 10;  // Default to 10
-    private String sortBy = "createdAt";  // Default sortBy
-    private String sortDirection = "asc";  // Default direction
+    @Min(0)
+    private Integer page;
+    @Min(1)
+    private Integer size;
 }
