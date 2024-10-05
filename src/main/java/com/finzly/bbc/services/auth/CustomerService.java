@@ -9,15 +9,22 @@ import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.repositories.auth.CustomerRepository;
 import com.finzly.bbc.repositories.auth.UserRepository;
+import com.finzly.bbc.utils.CsvParserUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVRecord;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -77,6 +84,74 @@ public class CustomerService {
 
         // Directly return the response from createCustomer
         return createCustomer (customerRequest);
+    }
+
+    // Method to add bulk customers with user details
+    public BulkUserCustomerResponse addBulkCustomersWithUserDetails(BulkUserCustomerRequest bulkUserCustomerRequest) {
+        List<UserCustomerRequest> userCustomerRequests = bulkUserCustomerRequest.getUserCustomers();
+        List<UserCustomerResponse> successfulResponses = new ArrayList<>();
+        List<FailedUserCustomerRequest> failedRequests = new ArrayList<>(); // List for failed requests
+
+        for (UserCustomerRequest userCustomerRequest : userCustomerRequests) {
+            try {
+                // Validate request
+                validateUserCustomerRequest(userCustomerRequest);
+
+                // Check if user already exists
+                if (userExists(userCustomerRequest.getEmail())) {
+                    log.warn("User with email {} already exists. Skipping this record.", userCustomerRequest.getEmail());
+                    continue; // Skip if user exists
+                }
+
+                // Proceed to add customer
+                UserCustomerResponse response = addCustomerWithUserDetails(userCustomerRequest);
+                successfulResponses.add(response);
+
+            } catch (Exception e) {
+                log.error("Failed to add customer for request {}: {}", userCustomerRequest, e.getMessage());
+                failedRequests.add(new FailedUserCustomerRequest(userCustomerRequest, e.getMessage())); // Add to failed requests
+            }
+        }
+
+        return BulkUserCustomerResponse.builder() // Return both successful and failed responses
+                .successfulResponses(successfulResponses)
+                .failedRequests(failedRequests)
+                .build();
+    }
+
+    // Method to check if a user already exists based on their email
+    public boolean userExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    // Method to process CSV file and create bulk customers with user details
+    public BulkUserCustomerResponse addBulkCustomersWithCsv(MultipartFile csvFile) {
+        try {
+            // Parse CSV file into list of UserCustomerRequest
+            List<UserCustomerRequest> userCustomerRequests = CsvParserUtil.parseCsvFile(
+                    csvFile, this::mapCsvRecordToUserCustomerRequest);
+
+            // Call existing bulk creation method
+            BulkUserCustomerRequest bulkRequest = new BulkUserCustomerRequest();
+            bulkRequest.setUserCustomers(userCustomerRequests);
+
+            return addBulkCustomersWithUserDetails(bulkRequest);
+
+        } catch (IOException e) {
+            log.error("Error processing CSV file: {}", e.getMessage());
+            throw new BadRequestException("Failed to process the CSV file.");
+        }
+    }
+
+    // Helper method to map a CSVRecord to UserCustomerRequest
+    private UserCustomerRequest mapCsvRecordToUserCustomerRequest(CSVRecord record) {
+        return UserCustomerRequest.builder()
+                .firstName(record.get("firstName"))
+                .lastName(record.get("lastName"))
+                .email(record.get("email"))
+                .phoneNumber(record.get("phoneNumber"))
+                .address(record.get("address"))
+                .build();
     }
 
     // Get customer by ID

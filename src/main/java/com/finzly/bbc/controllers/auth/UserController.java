@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -76,6 +77,19 @@ public class UserController {
         UserCustomerResponse customerResponse = customerService.addCustomerWithUserDetails (userCustomerRequest);
         return ResponseEntity.status (HttpStatus.CREATED)
                 .body (CustomApiResponse.success ("Customer created successfully", customerResponse, HttpStatus.CREATED.value ()));
+    }
+
+    @PostMapping("customers/bulk")
+    public ResponseEntity<CustomApiResponse<BulkUserCustomerResponse>> addBulkCustomers(
+            @RequestBody BulkUserCustomerRequest bulkUserCustomerRequest) {
+        BulkUserCustomerResponse response = customerService.addBulkCustomersWithUserDetails(bulkUserCustomerRequest);
+        return ResponseEntity.status (HttpStatus.CREATED).body(CustomApiResponse.success ("Customer created successfully", response, HttpStatus.CREATED.value ()));
+    }
+
+    @PostMapping("customers/bulk/csv")
+    public ResponseEntity<CustomApiResponse<BulkUserCustomerResponse>> addBulkCustomersWithCsv(@RequestParam("customerList") MultipartFile file) {
+        BulkUserCustomerResponse response = customerService.addBulkCustomersWithCsv(file);
+        return ResponseEntity.status (HttpStatus.CREATED).body(CustomApiResponse.success ("Customer created successfully", response, HttpStatus.CREATED.value ()));
     }
 
     @GetMapping("/customers/{id}")
