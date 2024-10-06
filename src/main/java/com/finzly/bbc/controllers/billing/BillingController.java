@@ -4,7 +4,9 @@ import com.finzly.bbc.dtos.billing.*;
 import com.finzly.bbc.dtos.common.PaginationRequest;
 import com.finzly.bbc.dtos.common.PaginationResponse;
 import com.finzly.bbc.response.CustomApiResponse;
-import com.finzly.bbc.services.billing.*;
+import com.finzly.bbc.services.billing.ConnectionService;
+import com.finzly.bbc.services.billing.ConnectionTypeService;
+import com.finzly.bbc.services.billing.InvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -12,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/billing/connections")
@@ -21,8 +25,6 @@ public class BillingController {
 
     private final ConnectionService connectionService;
     private final ConnectionTypeService connectionTypeService;
-    private final TariffService tariffService;
-    private final TariffSlabService tariffSlabService;
     private final InvoiceService invoiceService;
 
     // ------------------------ Connection Management ------------------------
@@ -76,7 +78,6 @@ public class BillingController {
 
         return ResponseEntity.ok(CustomApiResponse.success("Connections fetched successfully", response, HttpStatus.OK.value()));
     }
-
     // ------------------------ Connection Type Management ------------------------
 
     @PostMapping("/types")
@@ -124,70 +125,9 @@ public class BillingController {
         return ResponseEntity.ok(CustomApiResponse.success("Connection types fetched successfully", response, HttpStatus.OK.value()));
     }
 
-    // ------------------------  Tariff Management ------------------------
-    @PostMapping("/tariffs")
-    @Operation(summary = "Create Tariff", description = "Create a new tariff")
-    public ResponseEntity<CustomApiResponse<TariffResponse>> createTariff(TariffRequest request) {
-        TariffResponse response = tariffService.createTariff(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(CustomApiResponse.success("Tariff created successfully", response, HttpStatus.CREATED.value()));
-    }
-
-    @GetMapping("/tariffs/{id}")
-    @Operation(summary = "Get Tariff by ID", description = "Retrieve a tariff by its ID")
-    public ResponseEntity<CustomApiResponse<TariffResponse>> getTariffById(@PathVariable String id) {
-        TariffResponse response = tariffService.getTariffById(id);
-        return ResponseEntity.ok(CustomApiResponse.success("Tariff fetched successfully", response, HttpStatus.OK.value()));
-    }
-
-    @PutMapping("/tariffs/{id}")
-    @Operation(summary = "Update Tariff", description = "Update tariff details by ID")
-    public ResponseEntity<CustomApiResponse<TariffResponse>> updateTariff(@PathVariable String id, TariffRequest request) {
-        TariffResponse response = tariffService.updateTariff(id, request);
-        return ResponseEntity.ok(CustomApiResponse.success("Tariff updated successfully", response, HttpStatus.OK.value()));
-    }
-
-    @DeleteMapping("/tariffs/{id}")
-    @Operation(summary = "Delete Tariff", description = "Delete a tariff by its ID")
-    public ResponseEntity<CustomApiResponse<String>> deleteTariff(@PathVariable String id) {
-        tariffService.deleteTariff(id);
-        return ResponseEntity.ok(CustomApiResponse.success("Tariff deleted successfully", null, HttpStatus.OK.value()));
-    }
-
-
-    @PostMapping("/tariffs/slab")
-    @Operation(summary = "Create Tariff Slab", description = "Create a new tariff slab")
-    public ResponseEntity<CustomApiResponse<TariffSlabResponse>> createTariffSlab(TariffSlabRequest request) {
-        TariffSlabResponse response = tariffSlabService.createTariffSlab(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(CustomApiResponse.success("Tariff slab created successfully", response, HttpStatus.CREATED.value()));
-    }
-
-    @GetMapping("/tariffs/slab/{id}")
-    @Operation(summary = "Get Tariff Slab by ID", description = "Retrieve a tariff slab by its ID")
-    public ResponseEntity<CustomApiResponse<TariffSlabResponse>> getTariffSlabById(@PathVariable String id) {
-        TariffSlabResponse response = tariffSlabService.getTariffSlabById(id);
-        return ResponseEntity.ok(CustomApiResponse.success("Tariff slab fetched successfully", response, HttpStatus.OK.value()));
-    }
-
-    @PutMapping("/tariffs/slab/{id}")
-    @Operation(summary = "Update Tariff Slab", description = "Update tariff slab details by ID")
-    public ResponseEntity<CustomApiResponse<TariffSlabResponse>> updateTariffSlab(@PathVariable String id, TariffSlabRequest request) {
-        TariffSlabResponse response = tariffSlabService.updateTariffSlab(id, request);
-        return ResponseEntity.ok(CustomApiResponse.success("Tariff slab updated successfully", response, HttpStatus.OK.value()));
-    }
-
-    @DeleteMapping("/tariffs/slab/{id}")
-    @Operation(summary = "Delete Tariff Slab", description = "Delete a tariff slab by its ID")
-    public ResponseEntity<CustomApiResponse<String>> deleteTariffSlab(@PathVariable String id) {
-        tariffSlabService.deleteTariffSlab(id);
-        return ResponseEntity.ok(CustomApiResponse.success("Tariff slab deleted successfully", null, HttpStatus.OK.value()));
-    }
-
-
     // ------------------------ Invoice Management ------------------------
 
-    @PostMapping("/invoices")
+    @PostMapping("/invoices")  // Create a new invoice at a distinct endpoint
     @Operation(summary = "Create Invoice", description = "Create a new invoice")
     public ResponseEntity<CustomApiResponse<InvoiceResponse>> createInvoice(
             @RequestBody @Valid InvoiceRequest invoiceRequest) {
@@ -196,23 +136,21 @@ public class BillingController {
                 .body(CustomApiResponse.success("Invoice created successfully", invoiceResponse, HttpStatus.CREATED.value()));
     }
 
-    @GetMapping("/invoices/{id}")
+    @GetMapping("/invoices/{id}")  // Retrieve invoice by ID
     @Operation(summary = "Get Invoice by ID", description = "Retrieve an invoice by its ID")
     public ResponseEntity<CustomApiResponse<InvoiceResponse>> getInvoiceById(@PathVariable String id) {
         InvoiceResponse invoiceResponse = invoiceService.getInvoiceById(id);
         return ResponseEntity.ok(CustomApiResponse.success("Invoice fetched successfully", invoiceResponse, HttpStatus.OK.value()));
     }
 
-    @PutMapping("/invoices/{id}")
-    @Operation(summary = "Update Invoice", description = "Update invoice details by ID")
-    public ResponseEntity<CustomApiResponse<InvoiceResponse>> updateInvoice(
-            @PathVariable String id,
-            @RequestBody @Valid InvoiceRequest invoiceRequest) {
+    @PutMapping("/invoices/{id}")  // Update an invoice by its ID
+    @Operation(summary = "Update Invoice", description = "Update an invoice by its ID")
+    public ResponseEntity<CustomApiResponse<InvoiceResponse>> updateInvoice (@PathVariable String id, @RequestBody @Valid InvoiceRequest invoiceRequest) {
         InvoiceResponse invoiceResponse = invoiceService.updateInvoice(id, invoiceRequest);
         return ResponseEntity.ok(CustomApiResponse.success("Invoice updated successfully", invoiceResponse, HttpStatus.OK.value()));
     }
 
-    @DeleteMapping("/invoices/{id}")
+    @DeleteMapping("/invoices/{id}") // Delete an invoice by its ID
     @Operation(summary = "Delete Invoice", description = "Delete an invoice by its ID")
     public ResponseEntity<CustomApiResponse<String>> deleteInvoice(@PathVariable String id) {
         invoiceService.deleteInvoice(id);
@@ -220,14 +158,16 @@ public class BillingController {
     }
 
     @GetMapping("/invoices")
-    @Operation(summary = "Search Invoices with Pagination", description = "Search invoices with pagination")
+    @Operation(summary = "Search Invoices with Pagination", description = "Search invoices with optional filters and pagination")
     public ResponseEntity<CustomApiResponse<PaginationResponse<InvoiceResponse>>> searchInvoices(
-            @ModelAttribute PaginationRequest paginationRequest) {
+            @ModelAttribute PaginationRequest paginationRequest,
+            @RequestParam(value = "connectionId", required = false) String connectionId,
+            @RequestParam(value = "dueDate", required = false) String dueDate) {
 
         if (paginationRequest.getPage() == null) paginationRequest.setPage(0);
         if (paginationRequest.getSize() == null) paginationRequest.setSize(10);
 
-        PaginationResponse<InvoiceResponse> response = invoiceService.searchInvoicesWithPagination(paginationRequest);
+        PaginationResponse<InvoiceResponse> response = invoiceService.searchInvoicesWithPagination (connectionId, LocalDateTime.parse (dueDate), paginationRequest);
         return ResponseEntity.ok(CustomApiResponse.success("Invoices fetched successfully", response, HttpStatus.OK.value()));
     }
 }

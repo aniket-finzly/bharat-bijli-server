@@ -24,13 +24,10 @@ public class Invoice {
 
     @ManyToOne
     @JoinColumn(name = "connection_id", nullable = false)
-    private Connection connection; // Relationship with Connection
+    private Connection connection;
 
     @Column(nullable = false)
-    private LocalDateTime billingPeriodStart;
-
-    @Column(nullable = false)
-    private LocalDateTime billingPeriodEnd;
+    private LocalDateTime dueDate;
 
     @Column(nullable = false)
     private BigDecimal totalUnits;
@@ -38,10 +35,11 @@ public class Invoice {
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(nullable = false)
+    private BigDecimal totalAmountAfterDiscount;
+
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
-
-    private LocalDateTime dueDate;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

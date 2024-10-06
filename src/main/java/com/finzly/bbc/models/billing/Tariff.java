@@ -5,10 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Entity
-@Table(name = "tariff")
+@Table(
+        name = "tariff",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"connection_type_id", "minUnits", "maxUnits"})
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,11 +24,14 @@ public class Tariff {
 
     @ManyToOne
     @JoinColumn(name = "connection_type_id", nullable = false)
-    private ConnectionType connectionType; // Relationship with ConnectionType
+    private ConnectionType connectionType;
 
-    // List of slabs associated with this tariff
-    @OneToMany(mappedBy = "tariff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TariffSlab> slabs;
+    @Column(nullable = false)
+    private Integer minUnits;
 
-    private String description;
+    @Column(nullable = false)
+    private Integer maxUnits;
+
+    @Column(nullable = false)
+    private Double ratePerUnit;
 }
