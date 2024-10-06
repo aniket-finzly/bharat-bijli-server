@@ -1,6 +1,6 @@
 package com.finzly.bbc.services.payment;
 
-import com.finzly.bbc.exceptions.custom.payment.DebitCardNotFoundException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.payment.Account;
 import com.finzly.bbc.models.payment.DebitCard;
 import com.finzly.bbc.repositories.payment.AccountRepository;
@@ -29,7 +29,7 @@ public class DebitCardService {
     // Create a new Debit Card
     public DebitCard createDebitCard (String accountId, String pin) throws Exception {
         Account account = accountRepository.findById (accountId)
-                .orElseThrow (() -> new DebitCardNotFoundException ("Account with ID " + accountId + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Account with ID " + accountId + " not found"));
 
         DebitCard debitCard = new DebitCard ();
         debitCard.setNumber (encryptDebitCardNumber (generateDebitCardNumber ()));
@@ -44,7 +44,7 @@ public class DebitCardService {
     // Retrieve Debit Card by ID
     public DebitCard getDebitCardById (String debitCardId) throws Exception {
         DebitCard debitCard = debitCardRepository.findById (debitCardId)
-                .orElseThrow (() -> new DebitCardNotFoundException ("Debit Card with ID " + debitCardId + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Debit Card with ID " + debitCardId + " not found"));
 
         // Decrypt sensitive fields before returning
         debitCard.setNumber (decryptDebitCardNumber (debitCard.getNumber ()));
@@ -75,7 +75,7 @@ public class DebitCardService {
     // Delete Debit Card by ID
     public void deleteDebitCard (String debitCardId) {
         if (!debitCardRepository.existsById (debitCardId)) {
-            throw new DebitCardNotFoundException ("Debit Card with ID " + debitCardId + " not found");
+            throw new ResourceNotFoundException ("Debit Card with ID " + debitCardId + " not found");
         }
         debitCardRepository.deleteById (debitCardId);
     }

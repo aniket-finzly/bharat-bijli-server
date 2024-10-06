@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,16 +27,19 @@ public class Invoice {
     private Connection connection;
 
     @Column(nullable = false)
-    private LocalDateTime dueDate;
+    private LocalDate dueDate;
 
     @Column(nullable = false)
-    private BigDecimal totalUnits;
+    private LocalDate month;
 
     @Column(nullable = false)
-    private BigDecimal totalAmount;
+    private Integer units;
 
     @Column(nullable = false)
-    private BigDecimal totalAmountAfterDiscount;
+    private Double billAmount;
+
+    @Column(nullable = false)
+    private Double finalAmount;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;

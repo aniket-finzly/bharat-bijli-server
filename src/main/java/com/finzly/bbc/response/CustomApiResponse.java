@@ -17,6 +17,7 @@ public class CustomApiResponse<T> {
     private String message;
     private T data;
     private String path;
+    private String completeUrl;
     private int statusCode;
     private Object errors;
     private long timestamp;
@@ -26,6 +27,7 @@ public class CustomApiResponse<T> {
         this.message = message;
         this.data = data;
         this.path = getCurrentPath ();
+        this.completeUrl = getCompleteUrl ();
         this.statusCode = 200;
         this.timestamp = System.currentTimeMillis ();
     }
@@ -35,6 +37,7 @@ public class CustomApiResponse<T> {
         this.message = message;
         this.data = null;
         this.path = getCurrentPath ();
+        this.completeUrl = getCompleteUrl ();
         this.statusCode = statusCode;
         this.errors = errors;
         this.timestamp = System.currentTimeMillis ();
@@ -79,5 +82,26 @@ public class CustomApiResponse<T> {
     private static String getCurrentPath () {
         HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull (RequestContextHolder.getRequestAttributes ())).getRequest ();
         return request.getRequestURI ();
+    }
+
+    private static String getCurrentUrl () {
+        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull (RequestContextHolder.getRequestAttributes ())).getRequest ();
+
+        String scheme = request.getScheme ();
+        String serverName = request.getServerName ();
+        int serverPort = request.getServerPort ();
+        String contextPath = request.getContextPath ();
+        String requestUri = request.getRequestURI ();
+
+        StringBuilder url = new StringBuilder ();
+        url.append (scheme).append ("://").append (serverName);
+
+        if ((scheme.equals ("http") && serverPort != 80) || (scheme.equals ("https") && serverPort != 443)) {
+            url.append (":").append (serverPort);
+        }
+
+        url.append (contextPath).append (requestUri);
+
+        return url.toString ();
     }
 }

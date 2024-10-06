@@ -43,8 +43,12 @@ public class SwaggerConfig implements WebMvcConfigurer {
                         1. **BBC - Utility Bill Pay (BBC-UBP)**: A customer-facing portal for bill payments, usage tracking, and bill downloads.
                         2. **BBC Ops**: A back office portal for operations employees to manage customer data and generate invoices.
                         
+                        ### Contact
+                        Email: aniket.finzly@outlook.com
+                        GitHub: https://github.com/aniket-finzly
                         
-                        
+                        Email: ganesh.finzly@outlook.com
+                        GitHub: https://github.com/ganesh-finzly
                         """)
                 .contact (createContact ());
     }

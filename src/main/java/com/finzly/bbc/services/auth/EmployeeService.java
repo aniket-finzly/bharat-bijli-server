@@ -3,7 +3,7 @@ package com.finzly.bbc.services.auth;
 import com.finzly.bbc.dto.auth.EmployeeDTO;
 import com.finzly.bbc.dto.auth.UserEmployeeSearchDTO;
 import com.finzly.bbc.dto.auth.mapper.EmployeeMapper;
-import com.finzly.bbc.exceptions.custom.auth.EmployeeNotFoundException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.auth.Employee;
 import com.finzly.bbc.repositories.auth.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class EmployeeService {
 
     public Employee getEmployeeById (String employeeId) {
         return employeeRepository.findById (employeeId)
-                .orElseThrow (() -> new EmployeeNotFoundException ("Employee not found with ID: " + employeeId));
+                .orElseThrow (() -> new ResourceNotFoundException ("Employee not found with ID: " + employeeId));
     }
 
     public List<Employee> getAllEmployees () {

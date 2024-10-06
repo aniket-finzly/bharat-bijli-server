@@ -1,7 +1,6 @@
 package com.finzly.bbc.services.payment;
 
-import com.finzly.bbc.exceptions.custom.payment.AccountNotFoundException;
-import com.finzly.bbc.exceptions.custom.payment.CreditCardNotFoundException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.payment.Account;
 import com.finzly.bbc.models.payment.CreditCard;
 import com.finzly.bbc.repositories.payment.AccountRepository;
@@ -30,7 +29,7 @@ public class CreditCardService {
     public CreditCard createCreditCard (String pin, Long limit, String cvv, LocalDate expiryTime, String accountId) throws Exception {
         // Find associated account
         Account account = accountRepository.findById (accountId)
-                .orElseThrow (() -> new AccountNotFoundException ("Account with ID " + accountId + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Account with ID " + accountId + " not found"));
 
         // Generate random 16-digit card number using RandomUtil
         String cardNumber = RandomUtil.generateRandomNumericString (16);
@@ -55,20 +54,20 @@ public class CreditCardService {
     // Retrieve credit card by ID
     public CreditCard getCreditCardById (String id) {
         return creditCardRepository.findById (id)
-                .orElseThrow (() -> new CreditCardNotFoundException ("Credit card with ID " + id + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Credit card with ID " + id + " not found"));
     }
 
     // Retrieve credit card by Number
     public CreditCard getCreditCardByNumber (String cardNumber) throws Exception {
         String encryptedCardNumber = EncryptionUtil.encrypt (cardNumber, encryptionKey);
         return creditCardRepository.findByNumber (encryptedCardNumber)
-                .orElseThrow (() -> new CreditCardNotFoundException ("Credit card with number " + cardNumber + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Credit card with number " + cardNumber + " not found"));
     }
 
     // Update credit card details
     public CreditCard updateCreditCard (String id, CreditCard updatedCreditCard) throws Exception {
         CreditCard existingCreditCard = creditCardRepository.findById (id)
-                .orElseThrow (() -> new CreditCardNotFoundException ("Credit card with ID " + id + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Credit card with ID " + id + " not found"));
 
         existingCreditCard.setCreditLimit (updatedCreditCard.getCreditLimit ());
         existingCreditCard.setExpiryTime (updatedCreditCard.getExpiryTime ());
@@ -79,7 +78,7 @@ public class CreditCardService {
     // Delete credit card by ID
     public void deleteCreditCard (String id) {
         if (!creditCardRepository.existsById (id)) {
-            throw new CreditCardNotFoundException ("Credit card with ID " + id + " not found");
+            throw new ResourceNotFoundException ("Credit card with ID " + id + " not found");
         }
         creditCardRepository.deleteById (id);
     }

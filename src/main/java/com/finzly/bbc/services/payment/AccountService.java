@@ -1,8 +1,7 @@
 package com.finzly.bbc.services.payment;
 
 import com.finzly.bbc.dto.payment.AccountDTO;
-import com.finzly.bbc.exceptions.custom.payment.AccountException;
-import com.finzly.bbc.exceptions.custom.payment.AccountNotFoundException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.models.payment.Account;
 import com.finzly.bbc.repositories.auth.UserRepository;
@@ -30,7 +29,7 @@ public class AccountService {
     public Account createAccount (AccountDTO accountDTO, String userId) {
         try {
             User user = userRepository.findById (userId)
-                    .orElseThrow (() -> new AccountException ("User not found with ID: " + userId));
+                    .orElseThrow (() -> new ResourceNotFoundException ("User not found with ID: " + userId));
 
             Account account = new Account ();
             account.setAccountNo (encryptAccountNo (accountDTO.getAccountNo ())); // Encrypt account number
@@ -41,14 +40,14 @@ public class AccountService {
 
             return accountRepository.save (account);
         } catch (Exception e) {
-            throw new AccountException ("Error creating account: " + e.getMessage ());
+            throw new ResourceNotFoundException ("Error creating account: " + e.getMessage ());
         }
     }
 
     // Retrieve account by ID
     public Account getAccountById (String id) {
         return accountRepository.findById (id)
-                .orElseThrow (() -> new AccountNotFoundException ("Account with ID " + id + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Account with ID " + id + " not found"));
     }
 
     // Retrieve all accounts
@@ -76,14 +75,14 @@ public class AccountService {
 
             return accountRepository.save (existingAccount);
         } catch (Exception e) {
-            throw new AccountException ("Error updating account: " + e.getMessage ());
+            throw new ResourceNotFoundException ("Error updating account: " + e.getMessage ());
         }
     }
 
     // Delete account by ID
     public void deleteAccount (String id) {
         if (!accountRepository.existsById (id)) {
-            throw new AccountNotFoundException ("Account with ID " + id + " not found");
+            throw new ResourceNotFoundException ("Account with ID " + id + " not found");
         }
         accountRepository.deleteById (id);
     }

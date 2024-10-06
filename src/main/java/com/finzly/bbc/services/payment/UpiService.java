@@ -1,7 +1,7 @@
 package com.finzly.bbc.services.payment;
 
 import com.finzly.bbc.dto.payment.UpiPaymentDTO;
-import com.finzly.bbc.exceptions.custom.payment.UpiNotFoundException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.payment.Account;
 import com.finzly.bbc.models.payment.PaymentStatus;
 import com.finzly.bbc.models.payment.PaymentType;
@@ -38,7 +38,7 @@ public class UpiService {
     // Create a new UPI ID
     public Upi createUpi (String accountId, String upiId, String pin) throws Exception {
         Account account = accountRepository.findById (accountId)
-                .orElseThrow (() -> new UpiNotFoundException ("Account with ID " + accountId + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("Account with ID " + accountId + " not found"));
 
         Upi upi = new Upi ();
         upi.setUpiId (encryptUpiId (upiId));
@@ -51,7 +51,7 @@ public class UpiService {
     // Retrieve UPI by ID
     public Upi getUpiById (String upiId) throws Exception {
         Upi upi = upiRepository.findById (upiId)
-                .orElseThrow (() -> new UpiNotFoundException ("UPI with ID " + upiId + " not found"));
+                .orElseThrow (() -> new ResourceNotFoundException ("UPI with ID " + upiId + " not found"));
 
         // Decrypt sensitive fields before returning
         upi.setUpiId (decryptUpiId (upi.getUpiId ()));
@@ -81,7 +81,7 @@ public class UpiService {
     // Delete UPI by ID
     public void deleteUpi (String upiId) {
         if (!upiRepository.existsById (upiId)) {
-            throw new UpiNotFoundException ("UPI with ID " + upiId + " not found");
+            throw new ResourceNotFoundException ("UPI with ID " + upiId + " not found");
         }
         upiRepository.deleteById (upiId);
     }

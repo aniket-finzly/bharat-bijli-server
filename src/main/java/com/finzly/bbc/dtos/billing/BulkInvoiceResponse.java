@@ -5,14 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class ConnectionRequest {
-    private String customerId;
-    private String connectionTypeId;
-    private String status;
+@NoArgsConstructor
+public class BulkInvoiceResponse {
+    private List<InvoiceResponse> successfulResponses;
+    private List<FailedInvoiceRequest> failedRequests;
 }
 
 

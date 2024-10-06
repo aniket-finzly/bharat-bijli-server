@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 @Slf4j
@@ -15,6 +16,15 @@ public class GlobalExceptionHandler {
     //  400 Bad Request
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<CustomApiResponse<Object>> handleBadRequest (BadRequestException ex) {
+        log.error (ex.getMessage ());
+        return new ResponseEntity<> (
+                CustomApiResponse.error (ex.getMessage (), HttpStatus.BAD_REQUEST.value ()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<CustomApiResponse<Object>> handleDataIntegrityViolation (MultipartException ex) {
         log.error (ex.getMessage ());
         return new ResponseEntity<> (
                 CustomApiResponse.error (ex.getMessage (), HttpStatus.BAD_REQUEST.value ()),
