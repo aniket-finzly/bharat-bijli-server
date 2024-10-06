@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,10 +27,10 @@ public class Invoice {
     private Connection connection; // Relationship with Connection
 
     @Column(nullable = false)
-    private LocalDateTime billingPeriodStart; // Changed to LocalDateTime
+    private LocalDateTime billingPeriodStart;
 
     @Column(nullable = false)
-    private LocalDateTime billingPeriodEnd; // Changed to LocalDateTime
+    private LocalDateTime billingPeriodEnd;
 
     @Column(nullable = false)
     private BigDecimal totalUnits;
@@ -41,6 +43,9 @@ public class Invoice {
 
     private LocalDateTime dueDate;
 
-    private LocalDateTime createdAt = LocalDateTime.now (); // Set to current date and time
-    private LocalDateTime updatedAt = LocalDateTime.now (); // Set to current date and time
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

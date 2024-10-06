@@ -1,67 +1,48 @@
 package com.finzly.bbc.services.billing;
 
-import com.finzly.bbc.dto.billing.TariffSlabDTO;
-import com.finzly.bbc.dto.billing.mapper.TariffSlabMapper;
-import com.finzly.bbc.models.billing.Tariff;
+import com.finzly.bbc.dtos.billing.TariffSlabRequest;
+import com.finzly.bbc.dtos.billing.TariffSlabResponse;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.billing.TariffSlab;
-import com.finzly.bbc.repositories.billing.TariffRepository;
 import com.finzly.bbc.repositories.billing.TariffSlabRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-// Service for TariffSlab entity
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class TariffSlabService {
 
     private final TariffSlabRepository tariffSlabRepository;
-    private final TariffSlabMapper tariffSlabMapper;
-    private final TariffRepository tariffRepository;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    public TariffSlabService (TariffSlabRepository tariffSlabRepository, TariffSlabMapper tariffSlabMapper,
-                              TariffRepository tariffRepository) {
-        this.tariffSlabRepository = tariffSlabRepository;
-        this.tariffSlabMapper = tariffSlabMapper;
-        this.tariffRepository = tariffRepository;
+    public TariffSlabResponse createTariffSlab(TariffSlabRequest request) {
+        TariffSlab tariffSlab = modelMapper.map(request, TariffSlab.class);
+        TariffSlab savedTariffSlab = tariffSlabRepository.save(tariffSlab);
+        return modelMapper.map(savedTariffSlab, TariffSlabResponse.class);
     }
 
-    // CRUD Operations
-    public List<TariffSlabDTO> getAllTariffSlabs () {
-        return tariffSlabRepository.findAll ().stream ()
-                .map (tariffSlabMapper::toTariffSlabDTO)
-                .collect (Collectors.toList ());
+    public TariffSlabResponse getTariffSlabById(String id) {
+        TariffSlab tariffSlab = tariffSlabRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tariff slab not found with ID: " + id));
+        return modelMapper.map(tariffSlab, TariffSlabResponse.class);
     }
 
-    public Optional<TariffSlabDTO> getTariffSlabById (String id) {
-        return tariffSlabRepository.findById (id).map (tariffSlabMapper::toTariffSlabDTO);
+    public TariffSlabResponse updateTariffSlab(String id, TariffSlabRequest request) {
+        TariffSlab tariffSlab = tariffSlabRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tariff slab not found with ID: " + id));
+
+        tariffSlab.setMinUnits(request.getMinUnits());
+        tariffSlab.setMaxUnits(request.getMaxUnits());
+        tariffSlab.setRatePerUnit(request.getRatePerUnit());
+
+        TariffSlab updatedTariffSlab = tariffSlabRepository.save(tariffSlab);
+        return modelMapper.map(updatedTariffSlab, TariffSlabResponse.class);
     }
 
-    public TariffSlabDTO createTariffSlab (TariffSlabDTO tariffSlabDTO) {
-        Tariff tariff = tariffRepository.findById (tariffSlabDTO.getTariffId ()).orElseThrow ();
-        TariffSlab tariffSlab = tariffSlabMapper.toTariffSlabEntity (tariffSlabDTO, tariff);
-        return tariffSlabMapper.toTariffSlabDTO (tariffSlabRepository.save (tariffSlab));
-    }
-
-    public TariffSlabDTO updateTariffSlab (String id, TariffSlabDTO tariffSlabDTO) {
-        TariffSlab tariffSlab = tariffSlabRepository.findById (id).orElseThrow ();
-        tariffSlabMapper.updateTariffSlabEntity (tariffSlab, tariffSlabDTO);
-        return tariffSlabMapper.toTariffSlabDTO (tariffSlabRepository.save (tariffSlab));
-    }
-
-    public void deleteTariffSlab (String id) {
-        tariffSlabRepository.deleteById (id);
-    }
-
-    // Searching and Filtering
-    public List<TariffSlabDTO> findTariffSlabsByTariffId (String tariffId) {
-        return tariffSlabRepository.findByTariffId (tariffId).stream ()
-                .map (tariffSlabMapper::toTariffSlabDTO)
-                .collect (Collectors.toList ());
+    public void deleteTariffSlab(String id) {
+        TariffSlab tariffSlab = tariffSlabRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tariff slab not found with ID: " + id));
+        tariffSlabRepository.delete(tariffSlab);
     }
 }

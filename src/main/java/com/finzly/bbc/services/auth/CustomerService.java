@@ -87,71 +87,71 @@ public class CustomerService {
     }
 
     // Method to add bulk customers with user details
-    public BulkUserCustomerResponse addBulkCustomersWithUserDetails(BulkUserCustomerRequest bulkUserCustomerRequest) {
-        List<UserCustomerRequest> userCustomerRequests = bulkUserCustomerRequest.getUserCustomers();
-        List<UserCustomerResponse> successfulResponses = new ArrayList<>();
-        List<FailedUserCustomerRequest> failedRequests = new ArrayList<>(); // List for failed requests
+    public BulkUserCustomerResponse addBulkCustomersWithUserDetails (BulkUserCustomerRequest bulkUserCustomerRequest) {
+        List<UserCustomerRequest> userCustomerRequests = bulkUserCustomerRequest.getUserCustomers ();
+        List<UserCustomerResponse> successfulResponses = new ArrayList<> ();
+        List<FailedUserCustomerRequest> failedRequests = new ArrayList<> (); // List for failed requests
 
         for (UserCustomerRequest userCustomerRequest : userCustomerRequests) {
             try {
                 // Validate request
-                validateUserCustomerRequest(userCustomerRequest);
+                validateUserCustomerRequest (userCustomerRequest);
 
-                // Check if user already exists
-                if (userExists(userCustomerRequest.getEmail())) {
-                    log.warn("User with email {} already exists. Skipping this record.", userCustomerRequest.getEmail());
-                    continue; // Skip if user exists
-                }
+//                // Check if user already exists
+//                if (userExists(userCustomerRequest.getEmail())) {
+//                    log.warn("User with email {} already exists. Skipping this record.", userCustomerRequest.getEmail());
+//                    continue; // Skip if user exists
+//                }
 
                 // Proceed to add customer
-                UserCustomerResponse response = addCustomerWithUserDetails(userCustomerRequest);
-                successfulResponses.add(response);
+                UserCustomerResponse response = addCustomerWithUserDetails (userCustomerRequest);
+                successfulResponses.add (response);
 
             } catch (Exception e) {
-                log.error("Failed to add customer for request {}: {}", userCustomerRequest, e.getMessage());
-                failedRequests.add(new FailedUserCustomerRequest(userCustomerRequest, e.getMessage())); // Add to failed requests
+                log.error ("Failed to add customer for request {}: {}", userCustomerRequest, e.getMessage ());
+                failedRequests.add (new FailedUserCustomerRequest (userCustomerRequest, e.getMessage ())); // Add to failed requests
             }
         }
 
-        return BulkUserCustomerResponse.builder() // Return both successful and failed responses
-                .successfulResponses(successfulResponses)
-                .failedRequests(failedRequests)
-                .build();
+        return BulkUserCustomerResponse.builder () // Return both successful and failed responses
+                .successfulResponses (successfulResponses)
+                .failedRequests (failedRequests)
+                .build ();
     }
 
     // Method to check if a user already exists based on their email
-    public boolean userExists(String email) {
-        return userRepository.findByEmail(email).isPresent();
+    public boolean userExists (String email) {
+        return userRepository.findByEmail (email).isPresent ();
     }
 
     // Method to process CSV file and create bulk customers with user details
-    public BulkUserCustomerResponse addBulkCustomersWithCsv(MultipartFile csvFile) {
+    public BulkUserCustomerResponse addBulkCustomersWithCsv (MultipartFile csvFile) {
         try {
             // Parse CSV file into list of UserCustomerRequest
-            List<UserCustomerRequest> userCustomerRequests = CsvParserUtil.parseCsvFile(
+            List<UserCustomerRequest> userCustomerRequests = CsvParserUtil.parseCsvFile (
                     csvFile, this::mapCsvRecordToUserCustomerRequest);
 
             // Call existing bulk creation method
-            BulkUserCustomerRequest bulkRequest = new BulkUserCustomerRequest();
-            bulkRequest.setUserCustomers(userCustomerRequests);
+            BulkUserCustomerRequest bulkRequest = new BulkUserCustomerRequest ();
+            bulkRequest.setUserCustomers (userCustomerRequests);
 
-            return addBulkCustomersWithUserDetails(bulkRequest);
+            return addBulkCustomersWithUserDetails (bulkRequest);
 
         } catch (IOException e) {
-            log.error("Error processing CSV file: {}", e.getMessage());
-            throw new BadRequestException("Failed to process the CSV file.");
+            log.error ("Error processing CSV file: {}", e.getMessage ());
+            throw new BadRequestException ("Failed to process the CSV file.");
         }
     }
 
     // Helper method to map a CSVRecord to UserCustomerRequest
-    private UserCustomerRequest mapCsvRecordToUserCustomerRequest(CSVRecord record) {
-        return UserCustomerRequest.builder()
-                .firstName(record.get("firstName"))
-                .lastName(record.get("lastName"))
-                .email(record.get("email"))
-                .phoneNumber(record.get("phoneNumber"))
-                .address(record.get("address"))
-                .build();
+    private UserCustomerRequest mapCsvRecordToUserCustomerRequest (CSVRecord record) {
+        return UserCustomerRequest.builder ()
+                .firstName (record.get ("firstName"))
+                .lastName (record.get ("lastName"))
+                .email (record.get ("email"))
+                .phoneNumber (record.get ("phoneNumber"))
+                .address (record.get ("address"))
+                .build ();
     }
 
     // Get customer by ID

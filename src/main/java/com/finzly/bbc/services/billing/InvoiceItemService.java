@@ -1,72 +1,50 @@
 package com.finzly.bbc.services.billing;
 
-import com.finzly.bbc.dto.billing.InvoiceItemDTO;
-import com.finzly.bbc.dto.billing.mapper.InvoiceItemMapper;
-import com.finzly.bbc.models.billing.Invoice;
+import com.finzly.bbc.dtos.billing.InvoiceItemRequest;
+import com.finzly.bbc.dtos.billing.InvoiceItemResponse;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.billing.InvoiceItem;
-import com.finzly.bbc.models.billing.Tariff;
 import com.finzly.bbc.repositories.billing.InvoiceItemRepository;
-import com.finzly.bbc.repositories.billing.InvoiceRepository;
-import com.finzly.bbc.repositories.billing.TariffRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-// Service for InvoiceItem entity
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class InvoiceItemService {
 
     private final InvoiceItemRepository invoiceItemRepository;
-    private final InvoiceItemMapper invoiceItemMapper;
-    private final InvoiceRepository invoiceRepository;
-    private final TariffRepository tariffRepository;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    public InvoiceItemService (InvoiceItemRepository invoiceItemRepository, InvoiceItemMapper invoiceItemMapper,
-                               InvoiceRepository invoiceRepository, TariffRepository tariffRepository) {
-        this.invoiceItemRepository = invoiceItemRepository;
-        this.invoiceItemMapper = invoiceItemMapper;
-        this.invoiceRepository = invoiceRepository;
-        this.tariffRepository = tariffRepository;
+    public InvoiceItemResponse createInvoiceItem(InvoiceItemRequest request) {
+        InvoiceItem invoiceItem = modelMapper.map(request, InvoiceItem.class);
+        InvoiceItem savedInvoiceItem = invoiceItemRepository.save(invoiceItem);
+        return modelMapper.map(savedInvoiceItem, InvoiceItemResponse.class);
     }
 
-    // CRUD Operations
-    public List<InvoiceItemDTO> getAllInvoiceItems () {
-        return invoiceItemRepository.findAll ().stream ()
-                .map (invoiceItemMapper::toInvoiceItemDTO)
-                .collect (Collectors.toList ());
+    public InvoiceItemResponse getInvoiceItemById(String id) {
+        InvoiceItem invoiceItem = invoiceItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice item not found with ID: " + id));
+        return modelMapper.map(invoiceItem, InvoiceItemResponse.class);
     }
 
-    public Optional<InvoiceItemDTO> getInvoiceItemById (String id) {
-        return invoiceItemRepository.findById (id).map (invoiceItemMapper::toInvoiceItemDTO);
+    public InvoiceItemResponse updateInvoiceItem(String id, InvoiceItemRequest request) {
+        InvoiceItem invoiceItem = invoiceItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice item not found with ID: " + id));
+
+        invoiceItem.setUnitsConsumed(request.getUnitsConsumed());
+        invoiceItem.setChargeAmount(request.getChargeAmount());
+        invoiceItem.setDescription(request.getDescription());
+
+        InvoiceItem updatedInvoiceItem = invoiceItemRepository.save(invoiceItem);
+        return modelMapper.map(updatedInvoiceItem, InvoiceItemResponse.class);
     }
 
-    public InvoiceItemDTO createInvoiceItem (InvoiceItemDTO invoiceItemDTO) {
-        Invoice invoice = invoiceRepository.findById (invoiceItemDTO.getInvoiceId ()).orElseThrow ();
-        Tariff tariff = tariffRepository.findById (invoiceItemDTO.getTariffId ()).orElseThrow ();
-        InvoiceItem invoiceItem = invoiceItemMapper.toInvoiceItemEntity (invoiceItemDTO, invoice, tariff);
-        return invoiceItemMapper.toInvoiceItemDTO (invoiceItemRepository.save (invoiceItem));
-    }
-
-    public InvoiceItemDTO updateInvoiceItem (String id, InvoiceItemDTO invoiceItemDTO) {
-        InvoiceItem invoiceItem = invoiceItemRepository.findById (id).orElseThrow ();
-        invoiceItemMapper.updateInvoiceItemEntity (invoiceItem, invoiceItemDTO);
-        return invoiceItemMapper.toInvoiceItemDTO (invoiceItemRepository.save (invoiceItem));
-    }
-
-    public void deleteInvoiceItem (String id) {
-        invoiceItemRepository.deleteById (id);
-    }
-
-    // Searching and Filtering
-    public List<InvoiceItemDTO> findInvoiceItemsByInvoiceId (String invoiceId) {
-        return invoiceItemRepository.findByInvoiceId (invoiceId).stream ()
-                .map (invoiceItemMapper::toInvoiceItemDTO)
-                .collect (Collectors.toList ());
+    public void deleteInvoiceItem(String id) {
+        InvoiceItem invoiceItem = invoiceItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice item not found with ID: " + id));
+        invoiceItemRepository.delete(invoiceItem);
     }
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,14 +24,14 @@ public class Connection {
 
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer; // Relationship with Customer
+    private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "connection_type_id", nullable = false)
-    private ConnectionType connectionType; // Relationship with ConnectionType
+    private ConnectionType connectionType;
 
-    @Column(nullable = false)
-    private LocalDateTime startDate; // Changed to LocalDateTime
+    @CreationTimestamp
+    private LocalDateTime startDate;
 
     @Enumerated(EnumType.STRING)
     private ConnectionStatus status;

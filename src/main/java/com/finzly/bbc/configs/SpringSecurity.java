@@ -33,9 +33,9 @@ public class SpringSecurity {
                     return config;
                 })).
                 authorizeHttpRequests (request -> request
-                        .requestMatchers ("/auth/otp/**", "/api-docs/**").permitAll ()
-                        .requestMatchers ("/api/auth/customers/**").fullyAuthenticated ()
-                        .anyRequest ().authenticated ())
+//                        .requestMatchers ("/auth/otp/**", "/api-docs/**").permitAll ()
+//                        .requestMatchers ("/api/auth/customers/**").fullyAuthenticated ()
+                        .anyRequest ().permitAll ())
                 .csrf (AbstractHttpConfigurer::disable)
                 .addFilterBefore (jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build ();

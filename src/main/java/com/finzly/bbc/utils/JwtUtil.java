@@ -1,9 +1,11 @@
 package com.finzly.bbc.utils;
 
+import com.finzly.bbc.exceptions.UnauthorizedException;
 import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.auth.Employee;
 import com.finzly.bbc.models.auth.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -135,9 +137,9 @@ public class JwtUtil {
     public Claims getAllClaims (String token) {
         try {
             return Jwts.parser ().verifyWith (getSigningKey ()).build ().parseSignedClaims (token).getPayload ();
-        } catch (Exception e) {
+        } catch (ExpiredJwtException e) {
             log.error ("Error parsing token: {}", e.getMessage ());
-            throw new IllegalArgumentException ("Invalid token.");
+            throw new UnauthorizedException ("Invalid token. Please log in again.");
         }
     }
 }

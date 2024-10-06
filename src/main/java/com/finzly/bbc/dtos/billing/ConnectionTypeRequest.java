@@ -1,4 +1,4 @@
-package com.finzly.bbc.dtos.auth;
+package com.finzly.bbc.dtos.billing;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomerRequest {
-    private String userId;
-    private String address;
+public class ConnectionTypeRequest {
+    private String typeName;
+    private String description;
 }
-

@@ -1,6 +1,8 @@
 package com.finzly.bbc.filters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finzly.bbc.utils.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +23,7 @@ import java.util.List;
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
+    private final ObjectMapper objectMapper = new ObjectMapper ();
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -35,7 +38,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (authorizationHeader != null && authorizationHeader.startsWith ("Bearer ")) {
             jwt = authorizationHeader.substring (7);
-            userId = jwtUtil.getAllClaims (jwt).get ("userId").toString ();
+            try {
+                userId = jwtUtil.getAllClaims (jwt).get ("userId").toString ();
+            } catch (ExpiredJwtException e) {
+                response.setStatus (HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            } catch (Exception e) {
+                response.setStatus (HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter ().write (objectMapper.writeValueAsString (e.getMessage ()));
+                return;
+            }
         }
 
         if (userId != null && SecurityContextHolder.getContext ().getAuthentication () == null) {

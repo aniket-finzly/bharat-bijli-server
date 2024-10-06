@@ -1,54 +1,86 @@
 package com.finzly.bbc.services.billing;
 
-import com.finzly.bbc.dto.billing.ConnectionTypeDTO;
-import com.finzly.bbc.dto.billing.mapper.ConnectionTypeMapper;
+import com.finzly.bbc.dtos.billing.ConnectionTypeRequest;
+import com.finzly.bbc.dtos.billing.ConnectionTypeResponse;
+import com.finzly.bbc.dtos.common.PaginationRequest;
+import com.finzly.bbc.dtos.common.PaginationResponse;
+import com.finzly.bbc.exceptions.BadRequestException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.billing.ConnectionType;
 import com.finzly.bbc.repositories.billing.ConnectionTypeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-// Service for ConnectionType entity
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class ConnectionTypeService {
 
     private final ConnectionTypeRepository connectionTypeRepository;
-    private final ConnectionTypeMapper connectionTypeMapper;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    public ConnectionTypeService (ConnectionTypeRepository connectionTypeRepository, ConnectionTypeMapper connectionTypeMapper) {
-        this.connectionTypeRepository = connectionTypeRepository;
-        this.connectionTypeMapper = connectionTypeMapper;
+    // Create a new ConnectionType
+    public ConnectionTypeResponse createConnectionType(ConnectionTypeRequest connectionTypeRequest) {
+        if (connectionTypeRequest.getTypeName() == null || connectionTypeRequest.getTypeName().isEmpty()) {
+            throw new BadRequestException("Type name is mandatory.");
+        }
+
+        ConnectionType connectionType = modelMapper.map(connectionTypeRequest, ConnectionType.class);
+        ConnectionType savedConnectionType = connectionTypeRepository.save(connectionType);
+        return modelMapper.map(savedConnectionType, ConnectionTypeResponse.class);
     }
 
-    // CRUD Operations
-    public List<ConnectionTypeDTO> getAllConnectionTypes () {
-        return connectionTypeRepository.findAll ().stream ()
-                .map (connectionTypeMapper::toConnectionTypeDTO)
-                .collect (Collectors.toList ());
+    // Read ConnectionType by ID
+    public ConnectionTypeResponse getConnectionTypeById(String id) {
+        ConnectionType connectionType = connectionTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("ConnectionType not found with ID: " + id));
+        return modelMapper.map(connectionType, ConnectionTypeResponse.class);
     }
 
-    public Optional<ConnectionTypeDTO> getConnectionTypeById (String id) {
-        return connectionTypeRepository.findById (id).map (connectionTypeMapper::toConnectionTypeDTO);
+    // Update ConnectionType details
+    public ConnectionTypeResponse updateConnectionType(String id, ConnectionTypeRequest connectionTypeRequest) {
+        ConnectionType connectionType = connectionTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("ConnectionType not found with ID: " + id));
+
+        // Update fields if they are present in the request
+        if (connectionTypeRequest.getTypeName() != null) {
+            connectionType.setTypeName(connectionTypeRequest.getTypeName());
+        }
+        if (connectionTypeRequest.getDescription() != null) {
+            connectionType.setDescription(connectionTypeRequest.getDescription());
+        }
+
+        ConnectionType updatedConnectionType = connectionTypeRepository.save(connectionType);
+        return modelMapper.map(updatedConnectionType, ConnectionTypeResponse.class);
     }
 
-    public ConnectionTypeDTO createConnectionType (ConnectionTypeDTO connectionTypeDTO) {
-        ConnectionType connectionType = connectionTypeMapper.toConnectionTypeEntity (connectionTypeDTO);
-        return connectionTypeMapper.toConnectionTypeDTO (connectionTypeRepository.save (connectionType));
+    // Delete ConnectionType by ID
+    public void deleteConnectionType(String id) {
+        ConnectionType connectionType = connectionTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("ConnectionType not found with ID: " + id));
+        connectionTypeRepository.delete(connectionType);
     }
 
-    public ConnectionTypeDTO updateConnectionType (String id, ConnectionTypeDTO connectionTypeDTO) {
-        ConnectionType connectionType = connectionTypeRepository.findById (id).orElseThrow ();
-        connectionTypeMapper.updateConnectionTypeEntity (connectionType, connectionTypeDTO);
-        return connectionTypeMapper.toConnectionTypeDTO (connectionTypeRepository.save (connectionType));
-    }
+    // Search ConnectionTypes with Pagination
+    public PaginationResponse<ConnectionTypeResponse> searchConnectionTypesWithPagination(PaginationRequest paginationRequest) {
+        Pageable pageable = PageRequest.of(paginationRequest.getPage(), paginationRequest.getSize());
+        Page<ConnectionType> connectionTypePage = connectionTypeRepository.findAll(pageable);
 
-    public void deleteConnectionType (String id) {
-        connectionTypeRepository.deleteById (id);
+        List<ConnectionTypeResponse> connectionTypeResponses = connectionTypePage.getContent().stream()
+                .map(connectionType -> modelMapper.map(connectionType, ConnectionTypeResponse.class))
+                .toList();
+
+        return PaginationResponse.<ConnectionTypeResponse>builder()
+                .content(connectionTypeResponses)
+                .totalPages(connectionTypePage.getTotalPages())
+                .totalElements(connectionTypePage.getTotalElements())
+                .size(connectionTypePage.getSize())
+                .number(connectionTypePage.getNumber())
+                .build();
     }
 }

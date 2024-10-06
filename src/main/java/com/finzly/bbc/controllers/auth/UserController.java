@@ -80,16 +80,16 @@ public class UserController {
     }
 
     @PostMapping("customers/bulk")
-    public ResponseEntity<CustomApiResponse<BulkUserCustomerResponse>> addBulkCustomers(
+    public ResponseEntity<CustomApiResponse<BulkUserCustomerResponse>> addBulkCustomers (
             @RequestBody BulkUserCustomerRequest bulkUserCustomerRequest) {
-        BulkUserCustomerResponse response = customerService.addBulkCustomersWithUserDetails(bulkUserCustomerRequest);
-        return ResponseEntity.status (HttpStatus.CREATED).body(CustomApiResponse.success ("Customer created successfully", response, HttpStatus.CREATED.value ()));
+        BulkUserCustomerResponse response = customerService.addBulkCustomersWithUserDetails (bulkUserCustomerRequest);
+        return ResponseEntity.status (HttpStatus.CREATED).body (CustomApiResponse.success ("Customer created successfully", response, HttpStatus.CREATED.value ()));
     }
 
     @PostMapping("customers/bulk/csv")
-    public ResponseEntity<CustomApiResponse<BulkUserCustomerResponse>> addBulkCustomersWithCsv(@RequestParam("customerList") MultipartFile file) {
-        BulkUserCustomerResponse response = customerService.addBulkCustomersWithCsv(file);
-        return ResponseEntity.status (HttpStatus.CREATED).body(CustomApiResponse.success ("Customer created successfully", response, HttpStatus.CREATED.value ()));
+    public ResponseEntity<CustomApiResponse<BulkUserCustomerResponse>> addBulkCustomersWithCsv (@RequestParam("customerList") MultipartFile file) {
+        BulkUserCustomerResponse response = customerService.addBulkCustomersWithCsv (file);
+        return ResponseEntity.status (HttpStatus.CREATED).body (CustomApiResponse.success ("Customer created successfully", response, HttpStatus.CREATED.value ()));
     }
 
     @GetMapping("/customers/{id}")

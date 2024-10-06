@@ -1,93 +1,134 @@
 package com.finzly.bbc.services.billing;
 
-import com.finzly.bbc.dto.billing.ConnectionDTO;
-import com.finzly.bbc.dto.billing.mapper.ConnectionMapper;
-import com.finzly.bbc.exceptions.custom.ResourceNotFoundException;
-import com.finzly.bbc.models.auth.Customer;
+import com.finzly.bbc.dtos.billing.ConnectionRequest;
+import com.finzly.bbc.dtos.billing.ConnectionResponse;
+import com.finzly.bbc.dtos.common.PaginationRequest;
+import com.finzly.bbc.dtos.common.PaginationResponse;
+import com.finzly.bbc.exceptions.BadRequestException;
+import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.billing.Connection;
 import com.finzly.bbc.models.billing.ConnectionStatus;
 import com.finzly.bbc.models.billing.ConnectionType;
-import com.finzly.bbc.repositories.auth.CustomerRepository;
+import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.repositories.billing.ConnectionRepository;
 import com.finzly.bbc.repositories.billing.ConnectionTypeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.finzly.bbc.repositories.auth.CustomerRepository;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-// Service for Connection entity
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class ConnectionService {
 
     private final ConnectionRepository connectionRepository;
-    private final ConnectionMapper connectionMapper;
     private final CustomerRepository customerRepository;
     private final ConnectionTypeRepository connectionTypeRepository;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    public ConnectionService (ConnectionRepository connectionRepository, ConnectionMapper connectionMapper,
-                              CustomerRepository customerRepository, ConnectionTypeRepository connectionTypeRepository) {
-        this.connectionRepository = connectionRepository;
-        this.connectionMapper = connectionMapper;
-        this.customerRepository = customerRepository;
-        this.connectionTypeRepository = connectionTypeRepository;
-    }
-
-    // CRUD Operations
-    public List<ConnectionDTO> getAllConnections () {
-        return connectionRepository.findAll ().stream ()
-                .map (connectionMapper::toConnectionDTO)
-                .collect (Collectors.toList ());
-    }
-
-    public Optional<ConnectionDTO> getConnectionById (String id) {
-        return connectionRepository.findById (id)
-                .map (connectionMapper::toConnectionDTO)
-                .or (() -> {
-                    throw new ResourceNotFoundException ("Connection not found with ID: " + id);
-                });
-    }
-
-    public ConnectionDTO createConnection (ConnectionDTO connectionDTO) {
-        Customer customer = customerRepository.findById (connectionDTO.getCustomerId ())
-                .orElseThrow (() -> new ResourceNotFoundException ("Customer not found with ID: " + connectionDTO.getCustomerId ()));
-
-        ConnectionType connectionType = connectionTypeRepository.findById (connectionDTO.getConnectionTypeId ())
-                .orElseThrow (() -> new ResourceNotFoundException ("ConnectionType not found with ID: " + connectionDTO.getConnectionTypeId ()));
-
-        Connection connection = connectionMapper.toConnectionEntity (connectionDTO, customer, connectionType);
-        return connectionMapper.toConnectionDTO (connectionRepository.save (connection));
-    }
-
-    public ConnectionDTO updateConnection (String id, ConnectionDTO connectionDTO) {
-        Connection connection = connectionRepository.findById (id)
-                .orElseThrow (() -> new ResourceNotFoundException ("Connection not found with ID: " + id));
-
-        connectionMapper.updateConnectionEntity (connection, connectionDTO);
-        return connectionMapper.toConnectionDTO (connectionRepository.save (connection));
-    }
-
-    public void deleteConnection (String id) {
-        if (!connectionRepository.existsById (id)) {
-            throw new ResourceNotFoundException ("Connection not found with ID: " + id);
+    // Create a new connection
+    public ConnectionResponse createConnection(ConnectionRequest connectionRequest) {
+        if (connectionRequest.getCustomerId() == null || connectionRequest.getConnectionTypeId() == null) {
+            throw new BadRequestException("Customer ID and Connection Type ID are mandatory.");
         }
-        connectionRepository.deleteById (id);
+
+        Customer customer = customerRepository.findById(connectionRequest.getCustomerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + connectionRequest.getCustomerId()));
+
+        ConnectionType connectionType = connectionTypeRepository.findById(connectionRequest.getConnectionTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Connection Type not found with ID: " + connectionRequest.getConnectionTypeId()));
+
+        Connection connection = new Connection();
+        connection.setCustomer(customer);
+        connection.setConnectionType(connectionType);
+        connection.setStatus(ConnectionStatus.ACTIVE);
+        Connection savedConnection = connectionRepository.save(connection);
+
+        return modelMapper.map(savedConnection, ConnectionResponse.class);
     }
 
-    // Searching and Filtering
-    public List<ConnectionDTO> searchConnectionsByCustomer (String customerId) {
-        return connectionRepository.findByCustomer_CustomerId (customerId).stream ()
-                .map (connectionMapper::toConnectionDTO)
-                .collect (Collectors.toList ());
+    // Read connection by ID
+    public ConnectionResponse getConnectionById(String id) {
+        Connection connection = connectionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Connection not found with ID: " + id));
+
+        // Manually map the connection and related customer and connection type details
+        return ConnectionResponse.builder()
+                .id(connection.getId())
+                .customerId(connection.getCustomer().getCustomerId ())
+                .customerName(connection.getCustomer().getUser ().getFirstName () + " " + connection.getCustomer().getUser ().getLastName ())
+                .customerEmail(connection.getCustomer().getUser().getEmail())
+                .connectionTypeId(connection.getConnectionType().getId())
+                .connectionTypeName(connection.getConnectionType().getTypeName())
+                .startDate(connection.getStartDate())
+                .status(connection.getStatus().name())
+                .build();
     }
 
-    public List<ConnectionDTO> findActiveConnections () {
-        return connectionRepository.findByStatus (ConnectionStatus.ACTIVE).stream ()
-                .map (connectionMapper::toConnectionDTO)
-                .collect (Collectors.toList ());
+
+    // Update connection details
+    public ConnectionResponse updateConnection(String id, ConnectionRequest connectionRequest) {
+        Connection connection = connectionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Connection not found with ID: " + id));
+
+        // Update fields if they are present in the request
+        if (connectionRequest.getCustomerId() != null) {
+            Customer customer = customerRepository.findById(connectionRequest.getCustomerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + connectionRequest.getCustomerId()));
+            connection.setCustomer(customer);
+        }
+        if (connectionRequest.getConnectionTypeId() != null) {
+            ConnectionType connectionType = connectionTypeRepository.findById(connectionRequest.getConnectionTypeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Connection Type not found with ID: " + connectionRequest.getConnectionTypeId()));
+            connection.setConnectionType(connectionType);
+        }
+        if (connectionRequest.getStatus() != null) {
+            connection.setStatus(ConnectionStatus.valueOf(connectionRequest.getStatus()));
+        }
+
+        Connection updatedConnection = connectionRepository.save(connection);
+        return modelMapper.map(updatedConnection, ConnectionResponse.class);
     }
+
+    // Delete connection by ID
+    public void deleteConnection(String id) {
+        Connection connection = connectionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Connection not found with ID: " + id));
+        connectionRepository.delete(connection);
+    }
+
+    // Search connections with pagination
+    public PaginationResponse<ConnectionResponse> searchConnectionsWithPagination(
+            String customerId, String connectionTypeId, String status, PaginationRequest paginationRequest) {
+
+        Pageable pageable = PageRequest.of(paginationRequest.getPage(), paginationRequest.getSize());
+        Page<Connection> connectionPage = connectionRepository.searchConnections(customerId, connectionTypeId, status, pageable);
+
+        List<ConnectionResponse> connectionResponses = connectionPage.getContent().stream()
+                .map(connection -> ConnectionResponse.builder()
+                        .id(connection.getId())
+                        .customerId(connection.getCustomer().getCustomerId())
+                        .customerName(connection.getCustomer().getUser().getFirstName() + " " + connection.getCustomer().getUser().getLastName())
+                        .customerEmail(connection.getCustomer().getUser().getEmail())
+                        .connectionTypeId(connection.getConnectionType().getId())
+                        .connectionTypeName(connection.getConnectionType().getTypeName())
+                        .startDate(connection.getStartDate())
+                        .status(connection.getStatus().name())
+                        .build())
+                .toList();
+
+        return PaginationResponse.<ConnectionResponse>builder()
+                .content(connectionResponses)
+                .totalPages(connectionPage.getTotalPages())
+                .totalElements(connectionPage.getTotalElements())
+                .size(connectionPage.getSize())
+                .number(connectionPage.getNumber())
+                .build();
+    }
+
 }

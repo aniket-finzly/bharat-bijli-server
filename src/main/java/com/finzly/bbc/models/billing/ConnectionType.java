@@ -19,7 +19,7 @@ public class ConnectionType {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String typeName;
 
     private String description;
