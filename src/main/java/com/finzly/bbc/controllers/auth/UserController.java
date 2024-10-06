@@ -5,6 +5,7 @@ import com.finzly.bbc.dtos.common.PaginationRequest;
 import com.finzly.bbc.dtos.common.PaginationResponse;
 import com.finzly.bbc.response.CustomApiResponse;
 import com.finzly.bbc.services.auth.CustomerService;
+import com.finzly.bbc.services.auth.EmployeeService;
 import com.finzly.bbc.services.auth.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +24,7 @@ public class UserController {
 
     private final UserService userService;
     private final CustomerService customerService;
+    private final EmployeeService employeeService;
 
     // User endpoints
     @PostMapping("/users")
@@ -132,6 +134,41 @@ public class UserController {
         );
 
         return ResponseEntity.ok (CustomApiResponse.success ("Customers fetched successfully", response, HttpStatus.OK.value ()));
+    }
+
+
+
+    // Employee  endpoints
+    @PostMapping("/employees")
+    @Operation(summary = "Create Employee", description = "Create a new Employee with user details")
+    public ResponseEntity<CustomApiResponse<UserEmployeeResponse>> createCustomer (
+            @RequestBody @Valid UserEmployeeRequest userEmployeeRequest) {
+        UserEmployeeResponse employeeResponse = employeeService.addEmployeeWithUserDetails (userEmployeeRequest);
+        return ResponseEntity.status (HttpStatus.CREATED)
+                .body (CustomApiResponse.success ("Employee created successfully", employeeResponse, HttpStatus.CREATED.value ()));
+    }
+
+    @GetMapping("/employees/{id}")
+    @Operation(summary = "Get Employee by ID", description = "Retrieve a Employee by their ID")
+    public ResponseEntity<CustomApiResponse<UserEmployeeResponse>> getEmployeeById (@PathVariable String id) {
+        UserEmployeeResponse employeeResponse = employeeService.getEmployeeById (id);
+        return ResponseEntity.ok (CustomApiResponse.success ("Employee fetched successfully", employeeResponse, HttpStatus.OK.value ()));
+    }
+
+    @PutMapping("/employees/{id}")
+    @Operation(summary = "Update Employee", description = "Update employee details by ID")
+    public ResponseEntity<CustomApiResponse<UserEmployeeResponse>> updateEmployee (
+            @PathVariable String id,
+            @RequestBody @Valid UserEmployeeRequest userEmployeeRequest) {
+        UserEmployeeResponse employeeResponse = employeeService.updateUserCustomer (id, userEmployeeRequest);
+        return ResponseEntity.ok (CustomApiResponse.success ("Employee updated successfully", employeeResponse, HttpStatus.OK.value ()));
+    }
+
+    @DeleteMapping("/employees/{id}")
+    @Operation(summary = "Delete Employee", description = "Delete a employee by their ID")
+    public ResponseEntity<CustomApiResponse<String>> deleteEmployee (@PathVariable String id) {
+        employeeService.deleteEmployee (id);
+        return ResponseEntity.ok (CustomApiResponse.success ("Employee deleted successfully", null, HttpStatus.OK.value ()));
     }
 
 }

@@ -6,6 +6,7 @@ import com.finzly.bbc.dtos.common.PaginationResponse;
 import com.finzly.bbc.exceptions.BadRequestException;
 import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.auth.Customer;
+import com.finzly.bbc.models.auth.Employee;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.repositories.auth.CustomerRepository;
 import com.finzly.bbc.repositories.auth.UserRepository;
@@ -257,4 +258,6 @@ public class CustomerService {
             throw new BadRequestException ("Last name is mandatory.");
         }
     }
+
+
 }
