@@ -1,5 +1,6 @@
 package com.finzly.bbc.repositories.billing;
 
+import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.billing.Connection;
 import com.finzly.bbc.models.billing.Invoice;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, String> {
@@ -23,4 +25,5 @@ public interface InvoiceRepository extends JpaRepository<Invoice, String> {
 
     boolean existsByConnectionAndMonth (Connection connection, LocalDate month);
 
+    Collection<Invoice> findByConnection_Customer (Customer customer);
 }

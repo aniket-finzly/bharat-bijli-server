@@ -3,6 +3,7 @@ package com.finzly.bbc.controllers.billing;
 import com.finzly.bbc.dtos.billing.*;
 import com.finzly.bbc.dtos.common.PaginationRequest;
 import com.finzly.bbc.dtos.common.PaginationResponse;
+import com.finzly.bbc.models.billing.PaymentStatus;
 import com.finzly.bbc.response.CustomApiResponse;
 import com.finzly.bbc.services.billing.ConnectionService;
 import com.finzly.bbc.services.billing.ConnectionTypeService;
@@ -12,13 +13,20 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/billing/connections")
 @RequiredArgsConstructor
@@ -182,10 +190,22 @@ public class BillingController {
 
     @GetMapping("/invoices")  // Retrieve all invoices
     @Operation(summary = "Get Invoices", description = "Retrieve all invoices")
-    public ResponseEntity<CustomApiResponse<List<InvoiceResponse>>> getInvoices () {
-        List<InvoiceResponse> invoiceResponses = invoiceService.getAllInvoices ();
+    public ResponseEntity<CustomApiResponse<List<InvoiceResponse>>> getInvoices (
+            @RequestParam(required = false, defaultValue = "PENDING") PaymentStatus paymentStatus,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate, // Optional filter for start date
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate // Optional filter for end date
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext ().getAuthentication ();
+        String customerId = authentication.getName ();
+
+        List<InvoiceResponse> invoiceResponses = invoiceService.getAllInvoicesForCustomer (customerId, paymentStatus, startDate, endDate);
+
+        // Sort the invoice responses in descending order by due date
+        invoiceResponses.sort (Comparator.comparing (InvoiceResponse::getDueDate).reversed ());
+
         return ResponseEntity.ok (CustomApiResponse.success ("Invoices fetched successfully", invoiceResponses, HttpStatus.OK.value ()));
     }
+
 
     @PostMapping("/invoices/bulk")
     @Operation(summary = "Create Invoices", description = "Create multiple invoices")

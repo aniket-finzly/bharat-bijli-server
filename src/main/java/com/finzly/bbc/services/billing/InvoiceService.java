@@ -10,7 +10,9 @@ import com.finzly.bbc.repositories.auth.CustomerRepository;
 import com.finzly.bbc.repositories.billing.ConnectionRepository;
 import com.finzly.bbc.repositories.billing.InvoiceRepository;
 import com.finzly.bbc.repositories.billing.TariffRepository;
+import com.finzly.bbc.services.notification.EmailService;
 import com.finzly.bbc.utils.CsvParserUtil;
+import com.finzly.bbc.utils.PdfGenerationUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +43,12 @@ public class InvoiceService {
 
     @Autowired
     private TariffRepository tariffRepository;
+
+    @Autowired
+    private PdfGenerationUtility pdfGenerationUtility;
+
+    @Autowired
+    private EmailService emailService;
 
     // Method to create a single invoice
     public InvoiceResponse createInvoice (InvoiceRequest invoiceRequest) {
@@ -82,6 +91,7 @@ public class InvoiceService {
                 validateInvoiceRequest (invoiceRequest);
                 InvoiceResponse response = createInvoice (invoiceRequest);
                 successfulResponses.add (response);
+                sendInvoice (response.getId ());
             } catch (Exception e) {
                 log.error ("Failed to add invoice for request {}: {}", invoiceRequest, e.getMessage ());
                 failedRequests.add (new FailedInvoiceRequest (invoiceRequest, e.getMessage ()));
@@ -92,6 +102,15 @@ public class InvoiceService {
                 .successfulResponses (successfulResponses)
                 .failedRequests (failedRequests)
                 .build ();
+    }
+
+    private void sendInvoice (String id) throws Exception {
+        Invoice invoice = invoiceRepository.findById (id).orElseThrow (() -> new ResourceNotFoundException ("Invoice not found"));
+        InvoiceResponse invoiceResponse = getInvoiceById (id);
+        pdfGenerationUtility.generateInvoicePdf (invoiceResponse);
+
+        // Send email
+        emailService.sendInvoiceEmail (invoiceResponse);
     }
 
     public BulkInvoiceResponse addBulkInvoicesWithCsv (MultipartFile csvFile) {
@@ -130,7 +149,31 @@ public class InvoiceService {
     }
 
     // Method to get all invoices
-    public List<InvoiceResponse> getAllInvoices () {
+    public List<InvoiceResponse> getAllInvoicesForCustomer (
+            String customerId,
+            PaymentStatus paymentStatus,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        Customer customer = customerRepository.findById (customerId)
+                .orElseThrow (() -> new ResourceNotFoundException ("Customer not found"));
+
+        return invoiceRepository.findByConnection_Customer (customer)
+                .stream ()
+                .filter (invoice -> (paymentStatus == null || invoice.getPaymentStatus () == paymentStatus)) // Filter by payment status
+                .filter (invoice -> (startDate == null || !invoice.getDueDate ().isBefore (startDate))) // Filter by start date
+                .filter (invoice -> (endDate == null || !invoice.getDueDate ().isAfter (endDate))) // Filter by end date
+                .map (invoice -> {
+                    Tariff applicableTariff = findApplicableTariff (invoice.getConnection ().getConnectionType (), invoice.getUnits ());
+                    return mapToResponse (invoice, applicableTariff, customer);
+                })
+                .sorted (Comparator.comparing (InvoiceResponse::getDueDate))
+                .sorted (Comparator.comparing (InvoiceResponse::getPaymentStatus))
+                .collect (Collectors.toList ());
+    }
+
+
+    public List<InvoiceResponse> getAllInvoicesForAllCustomers () {
         List<Invoice> invoices = invoiceRepository.findAll ();
         return invoices.stream ()
                 .map (invoice -> {
