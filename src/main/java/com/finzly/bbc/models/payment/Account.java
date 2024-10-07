@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,39 +21,29 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    // Store the encrypted account number
     private String accountNo;
 
     private String bankName;
     private String ifsc;
-    private Long accountBalance;
+    private Double balance;
 
-    @Column(updatable = false)
-    private LocalDateTime createdTime;
-
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private List<Upi> upiIds;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private CreditCard creditCard;
-
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
     private DebitCard debitCard;
 
-    @OneToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "senderAccountId")
     private List<Transaction> transactions;
 
-    @PrePersist
-    protected void onCreate () {
-        this.createdTime = LocalDateTime.now ();
-        this.accountNo = generateAccountNo ();
-    }
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
-    private String generateAccountNo () {
+    public String generateAccountNo () {
         return RandomUtil.generateRandomNumericString (10);
     }
 }

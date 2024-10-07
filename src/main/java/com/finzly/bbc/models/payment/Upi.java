@@ -20,7 +20,7 @@ public class Upi {
     private String pin;
 
     // Many UPI IDs can belong to one Account
-    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 }

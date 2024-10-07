@@ -197,7 +197,7 @@ public class BillingController {
     }
 
     @PostMapping("/invoices/bulk/csv")
-    public ResponseEntity<CustomApiResponse<BulkInvoiceResponse>> uploadInvoicesCsv (@Valid @RequestParam("invoiceFile") MultipartFile file) {
+    public ResponseEntity<CustomApiResponse<BulkInvoiceResponse>> uploadInvoicesCsv (@RequestParam("invoiceFile") MultipartFile file) {
         BulkInvoiceResponse response = invoiceService.addBulkInvoicesWithCsv (file);
         return ResponseEntity.status (HttpStatus.CREATED).body (CustomApiResponse.success ("Invoices created successfully", response, HttpStatus.CREATED.value ()));
     }

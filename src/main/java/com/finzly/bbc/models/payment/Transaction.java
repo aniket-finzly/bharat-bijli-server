@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -18,10 +19,10 @@ public class Transaction {
     private String id;
 
     @Column(nullable = false)
-    private String senderAccountId; // ID of the sender's account
+    private String senderAccountId;
 
     @Column(nullable = false)
-    private String receiverAccountId; // ID of the receiver's account
+    private String receiverAccountId;
 
     @Column(nullable = false)
     private double amount; // Amount transferred
@@ -36,14 +37,9 @@ public class Transaction {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus status; // Status of the transaction
+    private PaymentStatus status;
 
     @Column(nullable = false)
-    private LocalDateTime transactionDate; // Timestamp of the transaction
-
-    @PrePersist
-    protected void onCreate () {
-        this.transactionDate = LocalDateTime.now (); // Set the current time when creating a transaction
-        this.status = PaymentStatus.PENDING; // Initial status
-    }
+    @CreationTimestamp
+    private LocalDateTime transactionDate;
 }

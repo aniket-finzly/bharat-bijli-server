@@ -43,4 +43,8 @@ springdoc:
     path: /api-docs/ui
 
 app.encryption.key: ${APP_ENCRYPTION_KEY}
+app.encryption.iv: ${APP_IV_KEY}
 
+spring.servlet.multipart.enabled: true
+spring.servlet.multipart.max-file-size: 10MB
+spring.servlet.multipart.max-request-size: 10MB

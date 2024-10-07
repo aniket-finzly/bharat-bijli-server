@@ -1,18 +1,22 @@
 package com.finzly.bbc.services.payment;
 
-import com.finzly.bbc.dto.payment.AccountDTO;
-import com.finzly.bbc.exceptions.ResourceNotFoundException;
+import com.finzly.bbc.dtos.payment.AccountRequest;
+import com.finzly.bbc.dtos.payment.AccountResponse;
+import com.finzly.bbc.exceptions.BadRequestException;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.models.payment.Account;
 import com.finzly.bbc.repositories.auth.UserRepository;
 import com.finzly.bbc.repositories.payment.AccountRepository;
 import com.finzly.bbc.utils.EncryptionUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Service
 public class AccountService {
 
@@ -25,74 +29,90 @@ public class AccountService {
     @Value("${app.encryption.key}")
     private String encryptionKey;
 
-    // Create a new account
-    public Account createAccount (AccountDTO accountDTO, String userId) {
-        try {
-            User user = userRepository.findById (userId)
-                    .orElseThrow (() -> new ResourceNotFoundException ("User not found with ID: " + userId));
+    // Method to create a new account from AccountRequest
+    public AccountResponse createAccount (AccountRequest accountRequest) {
+        User user = userRepository.findById (accountRequest.getUserId ()).orElseThrow (
+                () -> new BadRequestException ("User not found with id: " + accountRequest.getUserId ())
+        );
 
-            Account account = new Account ();
-            account.setAccountNo (encryptAccountNo (accountDTO.getAccountNo ())); // Encrypt account number
-            account.setBankName (accountDTO.getBankName ());
-            account.setIfsc (accountDTO.getIfsc ());
-            account.setAccountBalance (accountDTO.getAccountBalance ());
-            account.setUser (user);
+        Account account = new Account ();
 
-            return accountRepository.save (account);
-        } catch (Exception e) {
-            throw new ResourceNotFoundException ("Error creating account: " + e.getMessage ());
+        account.setBankName (accountRequest.getBankName ());
+        account.setIfsc (accountRequest.getIfsc ());
+        account.setBalance (accountRequest.getBalance ());
+
+        // Generate and encrypt the account number
+        String generatedAccountNo = account.generateAccountNo ();
+        account.setAccountNo (encryptField (generatedAccountNo));
+        account.setUser (user);
+
+        accountRepository.save (account);
+
+        return AccountResponse.builder ()
+                .accountHolderEmail (user.getEmail ())
+                .accountNo (decryptField (account.getAccountNo ())) // Decrypting for response
+                .accountHolderName (user.getFirstName () + " " + user.getLastName ())
+                .ifsc (account.getIfsc ())
+                .bankName (account.getBankName ())
+                .balance (account.getBalance ())
+                .createdAt (account.getCreatedAt ())
+                .id (account.getId ())
+                .build ();
+    }
+
+    public AccountResponse getAccountById (String id) {
+        Optional<Account> account = accountRepository.findById (id);
+        if (account.isEmpty ()) {
+            throw new BadRequestException ("Account not found with ID: " + id);
         }
+        return buildAccountResponse (account.get ());
     }
 
-    // Retrieve account by ID
-    public Account getAccountById (String id) {
-        return accountRepository.findById (id)
-                .orElseThrow (() -> new ResourceNotFoundException ("Account with ID " + id + " not found"));
+    public AccountResponse findAccountByAccountNo (String accountNo) {
+        log.info ("Encrypted Account No: {}", encryptField (accountNo));
+        Optional<Account> account = accountRepository.findByAccountNo (encryptField (accountNo)); // Encrypt accountNo for search
+        if (account.isEmpty ()) {
+            throw new BadRequestException ("Account not found with Account No: " + accountNo);
+        }
+        return buildAccountResponse (account.get ());
     }
 
-    // Retrieve all accounts
-    public List<Account> getAllAccounts () throws Exception {
+    private AccountResponse buildAccountResponse (Account account) {
+        User user = account.getUser ();
+        return AccountResponse.builder ()
+                .accountHolderEmail (user.getEmail ())
+                .accountNo (decryptField (account.getAccountNo ())) // Decrypting for response
+                .accountHolderName (user.getFirstName () + " " + user.getLastName ())
+                .ifsc (account.getIfsc ())
+                .bankName (account.getBankName ())
+                .balance (account.getBalance ())
+                .createdAt (account.getCreatedAt ())
+                .id (account.getId ())
+                .build ();
+    }
+
+
+    public List<AccountResponse> getAllAccounts () {
         List<Account> accounts = accountRepository.findAll ();
-        for (Account account : accounts) {
-            account.setAccountNo (decryptAccountNo (account.getAccountNo ()));
-        }
-        return accounts;
+        return accounts.stream ()
+                .map (this::buildAccountResponse)
+                .toList ();
     }
 
-    // Update account details
-    public Account updateAccount (String id, AccountDTO accountDTO) {
+    private String encryptField (String data) {
         try {
-            Account existingAccount = getAccountById (id);
-
-            existingAccount.setBankName (accountDTO.getBankName ());
-            existingAccount.setIfsc (accountDTO.getIfsc ());
-            existingAccount.setAccountBalance (accountDTO.getAccountBalance ());
-
-            // Encrypt account number if it needs to be updated
-            if (accountDTO.getAccountNo () != null) {
-                existingAccount.setAccountNo (encryptAccountNo (accountDTO.getAccountNo ()));
-            }
-
-            return accountRepository.save (existingAccount);
+            return EncryptionUtil.encrypt (data, encryptionKey);
         } catch (Exception e) {
-            throw new ResourceNotFoundException ("Error updating account: " + e.getMessage ());
+            log.error ("Error encrypting data: {}", data, e);
+            throw new RuntimeException ("Encryption error", e.getCause ());
         }
     }
 
-    // Delete account by ID
-    public void deleteAccount (String id) {
-        if (!accountRepository.existsById (id)) {
-            throw new ResourceNotFoundException ("Account with ID " + id + " not found");
+    private String decryptField (String field) {
+        try {
+            return EncryptionUtil.decrypt (field, encryptionKey);
+        } catch (Exception e) {
+            throw new RuntimeException ("Decryption error", e);
         }
-        accountRepository.deleteById (id);
-    }
-
-    // Helper methods for encryption and decryption
-    private String encryptAccountNo (String accountNo) throws Exception {
-        return EncryptionUtil.encrypt (accountNo, encryptionKey);
-    }
-
-    private String decryptAccountNo (String encryptedAccountNo) throws Exception {
-        return EncryptionUtil.decrypt (encryptedAccountNo, encryptionKey);
     }
 }

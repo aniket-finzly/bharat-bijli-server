@@ -1,5 +1,6 @@
 package com.finzly.bbc.models.auth;
 
+import com.finzly.bbc.models.payment.Account;
 import com.finzly.bbc.utils.RandomUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -48,6 +49,9 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Customer customer;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Account account;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

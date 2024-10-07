@@ -1,20 +1,18 @@
 package com.finzly.bbc.services.payment;
 
-import com.finzly.bbc.dto.payment.UpiPaymentDTO;
-import com.finzly.bbc.exceptions.ResourceNotFoundException;
-import com.finzly.bbc.models.payment.Account;
-import com.finzly.bbc.models.payment.PaymentStatus;
-import com.finzly.bbc.models.payment.PaymentType;
-import com.finzly.bbc.models.payment.Upi;
+import com.finzly.bbc.dtos.payment.UpiRequest;
+import com.finzly.bbc.dtos.payment.UpiResponse;
+import com.finzly.bbc.exceptions.BadRequestException;
+import com.finzly.bbc.models.payment.*;
 import com.finzly.bbc.repositories.payment.AccountRepository;
+import com.finzly.bbc.repositories.payment.TransactionRepository;
 import com.finzly.bbc.repositories.payment.UpiRepository;
-import com.finzly.bbc.services.notification.EmailService;
 import com.finzly.bbc.utils.EncryptionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UpiService {
@@ -26,116 +24,114 @@ public class UpiService {
     private AccountRepository accountRepository;
 
     @Autowired
-    private EmailService emailService;
+    private TransactionRepository transactionRepository;
 
     @Autowired
-    private TransactionService transactionService;
+    private AccountService accountService;
 
-
-    @Value("${app.encryption.key}") // Encryption key from application properties
+    @Value("${app.encryption.key}")
     private String encryptionKey;
 
-    // Create a new UPI ID
-    public Upi createUpi (String accountId, String upiId, String pin) throws Exception {
-        Account account = accountRepository.findById (accountId)
-                .orElseThrow (() -> new ResourceNotFoundException ("Account with ID " + accountId + " not found"));
+    // Method to create a new UPI ID from UpiRequest
+    public UpiResponse createUpi (UpiRequest upiRequest) {
+        Optional<Account> optionalAccount = accountRepository.findByAccountNo (encrypt (upiRequest.getAccountNo ()));
+
+        if (optionalAccount.isEmpty ()) {
+            throw new BadRequestException ("Account not found with account number: " + upiRequest.getAccountNo ());
+        }
+
 
         Upi upi = new Upi ();
-        upi.setUpiId (encryptUpiId (upiId));
-        upi.setPin (encryptPin (pin));
-        upi.setAccount (account);
-
-        return upiRepository.save (upi);
+        upi.setAccount (optionalAccount.get ());
+        upi.setUpiId (encrypt (upiRequest.getUpiId ()));
+        upi.setPin (encrypt (upiRequest.getPin ()));
+        upiRepository.save (upi);
+        return UpiResponse.builder ()
+                .id (upi.getId ())
+                .upiId (upi.getUpiId ())
+                .balance (optionalAccount.get ().getBalance ())
+                .accountNo (optionalAccount.get ().getAccountNo ())
+                .build ();
     }
 
-    // Retrieve UPI by ID
-    public Upi getUpiById (String upiId) throws Exception {
-        Upi upi = upiRepository.findById (upiId)
-                .orElseThrow (() -> new ResourceNotFoundException ("UPI with ID " + upiId + " not found"));
-
-        // Decrypt sensitive fields before returning
-        upi.setUpiId (decryptUpiId (upi.getUpiId ()));
-        upi.setPin (decryptPin (upi.getPin ()));
-        return upi;
-    }
-
-    // Retrieve all UPI IDs
-    public List<Upi> getAllUpis () throws Exception {
-        List<Upi> upis = upiRepository.findAll ();
-        // Decrypt sensitive fields before returning
-        for (Upi upi : upis) {
-            upi.setUpiId (decryptUpiId (upi.getUpiId ()));
-            upi.setPin (decryptPin (upi.getPin ()));
+    public UpiResponse getUpiById (String id) {
+        Optional<Upi> optionalUpi = upiRepository.findById (id);
+        if (optionalUpi.isEmpty ()) {
+            throw new BadRequestException ("Upi not found with ID: " + id);
         }
-        return upis;
+        Upi upi = optionalUpi.get ();
+        return UpiResponse.builder ()
+                .id (upi.getId ())
+                .upiId (decrypt (upi.getUpiId ()))
+                .balance (upi.getAccount ().getBalance ())
+                .accountNo (decrypt (upi.getAccount ().getAccountNo ()))
+                .build ();
     }
 
-    // Update UPI details
-    public Upi updateUpi (String upiId, Upi updatedUpi) throws Exception {
-        Upi existingUpi = getUpiById (upiId);
-        existingUpi.setUpiId (encryptUpiId (updatedUpi.getUpiId ()));
-        existingUpi.setPin (encryptPin (updatedUpi.getPin ()));
-        return upiRepository.save (existingUpi);
-    }
+    public Transaction payByUPI (String senderUpiId, String receiverUpiId, String senderPin, double amount) {
+        // Retrieve sender and receiver UPI details
 
-    // Delete UPI by ID
-    public void deleteUpi (String upiId) {
-        if (!upiRepository.existsById (upiId)) {
-            throw new ResourceNotFoundException ("UPI with ID " + upiId + " not found");
-        }
-        upiRepository.deleteById (upiId);
-    }
+        String encryptSenderUpiId = encrypt (senderUpiId);
+        String receiverSenderUpiId = encrypt (receiverUpiId);
 
-    // Helper methods for encryption and decryption
-    private String encryptUpiId (String upiId) throws Exception {
-        return EncryptionUtil.encrypt (upiId, encryptionKey);
-    }
+        Upi senderUpi = upiRepository.findByUpiId (encryptSenderUpiId);
+        Upi receiverUpi = upiRepository.findByUpiId (receiverSenderUpiId);
 
-    private String decryptUpiId (String encryptedUpiId) throws Exception {
-        return EncryptionUtil.decrypt (encryptedUpiId, encryptionKey);
-    }
-
-    private String encryptPin (String pin) throws Exception {
-        return EncryptionUtil.encrypt (pin, encryptionKey);
-    }
-
-    private String decryptPin (String encryptedPin) throws Exception {
-        return EncryptionUtil.decrypt (encryptedPin, encryptionKey);
-    }
-
-    public PaymentStatus handleUpiPayment (UpiPaymentDTO upiPaymentDTO) throws Exception {
-        Upi sender = upiRepository.findByUpiId (upiPaymentDTO.getSenderUpiId ());
-        Upi receiver = upiRepository.findByUpiId (upiPaymentDTO.getReceiverUpiId ());
-
-        if (sender == null || receiver == null) {
-            throw new RuntimeException ("Invalid UPI IDs");
+        if (senderUpi == null || receiverUpi == null) {
+            throw new BadRequestException ("Invalid UPI IDs provided.");
         }
 
-        if (!sender.getPin ().equals (decryptPin (upiPaymentDTO.getSenderPin ()))) {
-            throw new RuntimeException ("Invalid PIN");
+        // Validate sender's UPI PIN
+        if (!senderUpi.getPin ().equals (encrypt (senderPin))) {
+            throw new BadRequestException ("Incorrect UPI PIN.");
         }
 
-        if (sender.getAccount ().getAccountBalance () < upiPaymentDTO.getAmount ()) {
-            throw new RuntimeException ("Insufficient balance");
+        Account senderAccount = senderUpi.getAccount ();
+        Account receiverAccount = receiverUpi.getAccount ();
+
+        // Check sender's balance
+        if (senderAccount.getBalance () < amount) {
+            throw new BadRequestException ("Insufficient balance.");
         }
 
-        // Use the TransactionService to handle the payment transfer
-        transactionService.sendMoney (sender.getAccount ().getId (), receiver.getAccount ().getId (), upiPaymentDTO.getAmount (), PaymentType.UPI);
+        // Debit sender's account
+        senderAccount.setBalance (senderAccount.getBalance () - amount);
 
-        // Send email notifications
-        sendPaymentEmails (sender, receiver, upiPaymentDTO.getAmount ());
+        // Credit receiver's account
+        receiverAccount.setBalance (receiverAccount.getBalance () + amount);
 
-        return PaymentStatus.SUCCESS;
+        // Create and save the transaction
+        Transaction transaction = new Transaction ();
+        transaction.setSenderAccountId (senderAccount.getId ());
+        transaction.setReceiverAccountId (receiverAccount.getId ());
+        transaction.setAmount (amount);
+        transaction.setType (TransactionType.DEBIT);
+        transaction.setPaymentType (PaymentType.UPI);
+        transaction.setStatus (PaymentStatus.SUCCESS); // Update status as SUCCESS
+
+        transactionRepository.save (transaction);
+
+        // Update accounts
+        accountRepository.save (senderAccount);
+        accountRepository.save (receiverAccount);
+
+        return transaction;
     }
 
-    private void sendPaymentEmails (Upi sender, Upi receiver, Long amount) {
-        String senderEmail = sender.getAccount ().getUser ().getEmail ();
-        String receiverEmail = receiver.getAccount ().getUser ().getEmail ();
 
-        emailService.sendEmail (senderEmail, "Account Debited", "Your payment of " + amount + " has been debited and credited to UPI " + receiver.getUpiId (), false);
-        emailService.sendEmail (receiverEmail, "Payment Received", "Your payment of " + amount + " has been successfully received from UPI " + sender.getUpiId (), false);
+    private String encrypt (String data) {
+        try {
+            return EncryptionUtil.encrypt (data, encryptionKey);
+        } catch (Exception e) {
+            throw new RuntimeException ("Encryption error", e);
+        }
     }
 
+    private String decrypt (String data) {
+        try {
+            return EncryptionUtil.decrypt (data, encryptionKey);
+        } catch (Exception e) {
+            throw new RuntimeException ("Decryption error", e);
+        }
+    }
 }
-
-

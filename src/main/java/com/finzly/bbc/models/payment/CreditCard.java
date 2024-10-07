@@ -1,5 +1,6 @@
 package com.finzly.bbc.models.payment;
 
+import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.models.notification.OTP;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,14 +26,13 @@ public class CreditCard {
 
     private LocalDate expiryTime;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(orphanRemoval = true)
     @JoinColumn(name = "otp_id", referencedColumnName = "id")
     private OTP otp;
 
-    // One Credit Card belongs to one Account
-    @OneToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
 
 
