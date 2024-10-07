@@ -7,6 +7,7 @@ import com.finzly.bbc.models.payment.*;
 import com.finzly.bbc.repositories.payment.AccountRepository;
 import com.finzly.bbc.repositories.payment.TransactionRepository;
 import com.finzly.bbc.repositories.payment.UpiRepository;
+import com.finzly.bbc.services.notification.EmailService;
 import com.finzly.bbc.utils.EncryptionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,9 @@ public class UpiService {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private EmailService emailService;
 
     @Value("${app.encryption.key}")
     private String encryptionKey;
@@ -114,6 +118,28 @@ public class UpiService {
         // Update accounts
         accountRepository.save (senderAccount);
         accountRepository.save (receiverAccount);
+
+
+        String senderMessage = "Dear " + senderAccount.getUser ().getFirstName () + ",\n\n"
+                + "Your UPI transaction of Rs. " + amount + " to UPI ID: " + receiverUpiId + " has been successfully processed. "
+                + "Your updated account balance is Rs. " + senderAccount.getBalance () + ".\n\n"
+                + "Thank you for using our service.";
+
+        String receiverMessage = "Dear " + receiverAccount.getUser ().getFirstName () + ",\n\n"
+                + "You have received Rs. " + amount + " from UPI ID: " + senderUpiId + " via UPI. "
+                + "Your updated account balance is Rs. " + receiverAccount.getBalance () + ".\n\n"
+                + "Thank you for using our service.";
+
+        emailService.sendEmail (senderAccount.getUser ().getEmail (),
+                "UPI Transaction Successful",
+                senderMessage,
+                false); // Plain text email
+
+        emailService.sendEmail (receiverAccount.getUser ().getEmail (),
+                "UPI Transaction Received",
+                receiverMessage,
+                false); // Plain text email
+
 
         return transaction;
     }
