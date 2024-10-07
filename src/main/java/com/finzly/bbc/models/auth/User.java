@@ -1,5 +1,6 @@
 package com.finzly.bbc.models.auth;
 
+import com.finzly.bbc.models.notification.OTP;
 import com.finzly.bbc.models.payment.Account;
 import com.finzly.bbc.utils.RandomUtil;
 import jakarta.persistence.*;
@@ -52,6 +53,10 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Account account;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "otp_id", referencedColumnName = "id")
+    private OTP otp;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

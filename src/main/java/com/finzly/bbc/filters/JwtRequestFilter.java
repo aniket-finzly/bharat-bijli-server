@@ -1,6 +1,7 @@
 package com.finzly.bbc.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.finzly.bbc.exceptions.UnauthorizedException;
 import com.finzly.bbc.utils.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -19,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -39,14 +41,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith ("Bearer ")) {
             jwt = authorizationHeader.substring (7);
             try {
-                userId = jwtUtil.getAllClaims (jwt).get ("userId").toString ();
+                Map<String, Object> claims = jwtUtil.getAllClaims (jwt);
+                userId = (String) claims.get ("userId");
+                if (userId == null) {
+                    throw new UnauthorizedException ("User ID not found in token");
+                }
             } catch (ExpiredJwtException e) {
-                response.setStatus (HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+                throw new UnauthorizedException ("Token expired");
             } catch (Exception e) {
-                response.setStatus (HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter ().write (objectMapper.writeValueAsString (e.getMessage ()));
-                return;
+                throw new UnauthorizedException ("Unauthorized: " + e.getMessage ());
             }
         }
 

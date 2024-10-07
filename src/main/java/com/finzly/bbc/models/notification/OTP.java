@@ -30,6 +30,8 @@ public class OTP {
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
+
+    @Builder.Default
     private int otpAttemptCount = 0;
 
     public boolean isExpired () {
