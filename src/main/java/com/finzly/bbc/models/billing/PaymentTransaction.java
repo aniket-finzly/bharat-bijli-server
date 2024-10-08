@@ -1,11 +1,12 @@
 package com.finzly.bbc.models.billing;
 
+import com.finzly.bbc.models.payment.PaymentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,12 +26,14 @@ public class PaymentTransaction {
     private Invoice invoice; // Relationship with Invoice
 
     @Column(nullable = false)
-    private LocalDateTime paymentDate; // Changed to LocalDateTime
+    @CreationTimestamp
+    private LocalDateTime paymentDate;
 
     @Column(nullable = false)
-    private BigDecimal paymentAmount;
+    private Double paymentAmount;
 
-    private String paymentMethod;
+    @Column(nullable = false)
+    private PaymentType paymentType;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;

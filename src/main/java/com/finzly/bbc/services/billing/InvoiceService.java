@@ -6,16 +6,21 @@ import com.finzly.bbc.exceptions.ConflictException;
 import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.billing.*;
+import com.finzly.bbc.models.payment.PaymentType;
+import com.finzly.bbc.models.payment.Transaction;
 import com.finzly.bbc.repositories.auth.CustomerRepository;
 import com.finzly.bbc.repositories.billing.ConnectionRepository;
 import com.finzly.bbc.repositories.billing.InvoiceRepository;
+import com.finzly.bbc.repositories.billing.PaymentTransactionRepository;
 import com.finzly.bbc.repositories.billing.TariffRepository;
 import com.finzly.bbc.services.notification.EmailService;
+import com.finzly.bbc.services.payment.UpiService;
 import com.finzly.bbc.utils.CsvParserUtil;
 import com.finzly.bbc.utils.PdfGenerationUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +54,16 @@ public class InvoiceService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private UpiService upiService;
+
+    @Autowired
+    private PaymentTransactionRepository paymentTransactionRepository;
+
+    @Autowired
+    @Value("${finzly.upiId}")
+    private String receiverUpiId;
 
     // Method to create a single invoice
     public InvoiceResponse createInvoice (InvoiceRequest invoiceRequest) {
@@ -182,6 +197,47 @@ public class InvoiceService {
                     return mapToResponse (invoice, applicableTariff, customer);
                 })
                 .collect (Collectors.toList ());
+    }
+
+
+    public Transaction payByUpi (PayInvoiceByUpi invoiceByUpi) {
+
+        Invoice invoice = invoiceRepository.findById (invoiceByUpi.getInvoiceId ())
+                .orElseThrow (() -> new ResourceNotFoundException ("Invoice not found"));
+
+        if (invoice.getPaymentStatus ().equals (PaymentStatus.PAID)) {
+            throw new BadRequestException ("Invoice has already been paid");
+        }
+
+        Double amount = invoice.getBillAmount ();
+
+        if (invoice.getDueDate ().isAfter (LocalDate.now ())) {
+            amount = amount * 0.95;
+        }
+
+        Transaction transaction = upiService.payByUPI (invoiceByUpi.getSenderUpiId (), receiverUpiId, invoiceByUpi.getSenderPin (), amount);
+
+        if (transaction == null) {
+            invoice.setPaymentStatus (PaymentStatus.UNPAID);
+            PaymentTransaction paymentTransaction = new PaymentTransaction ();
+            paymentTransaction.setInvoice (invoice);
+            paymentTransaction.setPaymentStatus (PaymentStatus.FAILED);
+            paymentTransaction.setPaymentAmount (amount);
+            paymentTransaction.setPaymentType (PaymentType.UPI);
+            paymentTransactionRepository.save (paymentTransaction);
+        } else {
+            invoice.setPaymentStatus (PaymentStatus.PAID);
+            PaymentTransaction paymentTransaction = new PaymentTransaction ();
+            paymentTransaction.setInvoice (invoice);
+            paymentTransaction.setPaymentStatus (PaymentStatus.PAID);
+            paymentTransaction.setPaymentAmount (amount);
+            paymentTransaction.setPaymentType (PaymentType.UPI);
+            paymentTransactionRepository.save (paymentTransaction);
+        }
+        invoice.setFinalAmount (amount);
+        invoiceRepository.save (invoice);
+
+        return transaction;
     }
 
     // Private method to validate InvoiceRequest

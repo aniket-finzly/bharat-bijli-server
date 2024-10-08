@@ -4,5 +4,6 @@ package com.finzly.bbc.models.billing;
 public enum PaymentStatus {
     PAID,
     UNPAID,
-    PENDING
+    PENDING,
+    FAILED
 }

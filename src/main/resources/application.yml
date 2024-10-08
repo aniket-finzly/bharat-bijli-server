@@ -44,6 +44,8 @@ springdoc:
 
 app.encryption.key: ${APP_ENCRYPTION_KEY}
 app.encryption.iv: ${APP_IV_KEY}
+finzly:
+  upiId: ${FINZLY_UPI_ID}
 
 spring.servlet.multipart.enabled: true
 spring.servlet.multipart.max-file-size: 10MB

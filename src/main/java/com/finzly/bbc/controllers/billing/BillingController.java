@@ -4,6 +4,7 @@ import com.finzly.bbc.dtos.billing.*;
 import com.finzly.bbc.dtos.common.PaginationRequest;
 import com.finzly.bbc.dtos.common.PaginationResponse;
 import com.finzly.bbc.models.billing.PaymentStatus;
+import com.finzly.bbc.models.payment.Transaction;
 import com.finzly.bbc.response.CustomApiResponse;
 import com.finzly.bbc.services.billing.ConnectionService;
 import com.finzly.bbc.services.billing.ConnectionTypeService;
@@ -221,4 +222,13 @@ public class BillingController {
         BulkInvoiceResponse response = invoiceService.addBulkInvoicesWithCsv (file);
         return ResponseEntity.status (HttpStatus.CREATED).body (CustomApiResponse.success ("Invoices created successfully", response, HttpStatus.CREATED.value ()));
     }
+
+    @PostMapping("/invoices/payment/upi")
+    @Operation(summary = "Pay Invoice using UPI", description = "Pay an invoice using UPI")
+    public ResponseEntity<CustomApiResponse<Transaction>> payInvoiceUsingUpi (@RequestBody PayInvoiceByUpi payByUpi) {
+        Transaction transaction = invoiceService.payByUpi (payByUpi);
+        return ResponseEntity.ok (CustomApiResponse.success ("Invoice paid successfully", transaction, HttpStatus.OK.value ()));
+}
+
+
 }
