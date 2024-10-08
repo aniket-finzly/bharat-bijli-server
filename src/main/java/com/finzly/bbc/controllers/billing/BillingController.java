@@ -228,7 +228,7 @@ public class BillingController {
     public ResponseEntity<CustomApiResponse<Transaction>> payInvoiceUsingUpi (@RequestBody PayInvoiceByUpi payByUpi) {
         Transaction transaction = invoiceService.payByUpi (payByUpi);
         return ResponseEntity.ok (CustomApiResponse.success ("Invoice paid successfully", transaction, HttpStatus.OK.value ()));
-}
+    }
 
 
 }
