@@ -9,6 +9,7 @@ import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.repositories.auth.CustomerRepository;
 import com.finzly.bbc.repositories.auth.UserRepository;
+import com.finzly.bbc.services.notification.EmailService;
 import com.finzly.bbc.utils.CsvParserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class CustomerService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final UserService userService;
+    private final EmailService emailService;
 
     private static User getUser (UserCustomerRequest userCustomerRequest, Customer customer) {
         User user = customer.getUser ();
@@ -83,7 +85,9 @@ public class CustomerService {
         customerRequest.setAddress (userCustomerRequest.getAddress ());
 
         // Directly return the response from createCustomer
-        return createCustomer (customerRequest);
+        UserCustomerResponse response = createCustomer (customerRequest);
+        emailService.sendEmail (userCustomerRequest.getEmail (), "Welcome to Bharat Bijli Corporation", "Your user ID is: " + response.getCustomerId (), false);
+        return response;
     }
 
     // Method to add bulk customers with user details

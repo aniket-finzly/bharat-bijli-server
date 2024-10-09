@@ -8,6 +8,7 @@ import com.finzly.bbc.models.auth.Employee;
 import com.finzly.bbc.models.auth.User;
 import com.finzly.bbc.repositories.auth.EmployeeRepository;
 import com.finzly.bbc.repositories.auth.UserRepository;
+import com.finzly.bbc.services.notification.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -22,6 +23,7 @@ public class EmployeeService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final UserService userService;
+    private final EmailService emailService;
 
 
     private static User getUser (UserCustomerRequest userCustomerRequest, Customer customer) {
@@ -41,7 +43,7 @@ public class EmployeeService {
         return user;
     }
 
-    // Create a new EMployee
+    // Create a new Employee
     public UserEmployeeResponse createEmployee (EmployeeRequest employeeRequest) {
         if (employeeRequest.getUserId () == null || employeeRequest.getUserId ().isEmpty ()) {
             throw new BadRequestException ("User ID is mandatory.");
@@ -75,7 +77,9 @@ public class EmployeeService {
 
 
         // Directly return the response from createEmployee
-        return createEmployee (employeeRequest);
+        UserEmployeeResponse response = createEmployee (employeeRequest);
+        emailService.sendEmail (response.getEmail (), "Welcome Email", "Welcome to Finzly BBC. Your OTP is: " + response.getEmployeeId (), true);
+        return response;
     }
 
 
@@ -88,13 +92,12 @@ public class EmployeeService {
     }
 
     // Update user and Employee details
-    public UserEmployeeResponse updateUserCustomer (String employeeId, UserEmployeeRequest userEmployeeRequest) {
+    public UserEmployeeResponse updateUserEmployee (String employeeId, UserEmployeeRequest userEmployeeRequest) {
         // Find the employee by ID
         Employee employee = employeeRepository.findById (employeeId)
                 .orElseThrow (() -> new ResourceNotFoundException ("Employee not found with ID: " + employeeId));
 
-        // Update user details
-        User user = employee.getUser (); // Assuming Employee has a getUser() method
+        User user = employee.getUser ();
         if (userEmployeeRequest.getFirstName () != null) {
             user.setFirstName (userEmployeeRequest.getFirstName ());
         }
