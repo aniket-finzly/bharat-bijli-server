@@ -1,4 +1,4 @@
-package com.finzly.bbc.dto.notification;
+package com.finzly.bbc.dtos.notification;
 
 import lombok.Data;
 

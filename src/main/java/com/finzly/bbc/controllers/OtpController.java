@@ -1,7 +1,7 @@
 package com.finzly.bbc.controllers;
 
-import com.finzly.bbc.dto.notification.OtpSendRequestUserId;
-import com.finzly.bbc.dto.notification.OtpVerifyRequest;
+import com.finzly.bbc.dtos.notification.OtpSendRequestUserId;
+import com.finzly.bbc.dtos.notification.OtpVerifyRequest;
 import com.finzly.bbc.response.CustomApiResponse;
 import com.finzly.bbc.services.notification.OtpService;
 import io.swagger.v3.oas.annotations.Operation;
