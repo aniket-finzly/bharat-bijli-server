@@ -159,7 +159,7 @@ public class UserController {
     public ResponseEntity<CustomApiResponse<UserEmployeeResponse>> updateEmployee (
             @PathVariable String id,
             @RequestBody @Valid UserEmployeeRequest userEmployeeRequest) {
-        UserEmployeeResponse employeeResponse = employeeService.updateUserCustomer (id, userEmployeeRequest);
+        UserEmployeeResponse employeeResponse = employeeService.updateUserEmployee (id, userEmployeeRequest);
         return ResponseEntity.ok (CustomApiResponse.success ("Employee updated successfully", employeeResponse, HttpStatus.OK.value ()));
     }
 
