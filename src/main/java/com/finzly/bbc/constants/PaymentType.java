@@ -1,4 +1,4 @@
-package com.finzly.bbc.models.payment;
+package com.finzly.bbc.constants;
 
 public enum PaymentType {
     UPI,

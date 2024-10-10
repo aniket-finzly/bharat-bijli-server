@@ -1,9 +1,9 @@
 package com.finzly.bbc.controllers.billing;
 
+import com.finzly.bbc.constants.InvoiceTransactionStatus;
 import com.finzly.bbc.dtos.billing.*;
 import com.finzly.bbc.dtos.common.PaginationRequest;
 import com.finzly.bbc.dtos.common.PaginationResponse;
-import com.finzly.bbc.models.billing.PaymentStatus;
 import com.finzly.bbc.models.payment.Transaction;
 import com.finzly.bbc.response.CustomApiResponse;
 import com.finzly.bbc.services.billing.ConnectionService;
@@ -192,7 +192,7 @@ public class BillingController {
     @GetMapping("/invoices")  // Retrieve all invoices
     @Operation(summary = "Get Invoices", description = "Retrieve all invoices")
     public ResponseEntity<CustomApiResponse<List<InvoiceResponse>>> getInvoices (
-            @RequestParam(required = false, defaultValue = "PENDING") PaymentStatus paymentStatus,
+            @RequestParam(required = false, defaultValue = "PENDING") InvoiceTransactionStatus paymentStatus,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate, // Optional filter for start date
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate // Optional filter for end date
     ) {

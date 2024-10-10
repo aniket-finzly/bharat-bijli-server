@@ -1,4 +1,4 @@
-package com.finzly.bbc.models.billing;
+package com.finzly.bbc.constants;
 
 // Enum for Connection Status
 public enum ConnectionStatus {

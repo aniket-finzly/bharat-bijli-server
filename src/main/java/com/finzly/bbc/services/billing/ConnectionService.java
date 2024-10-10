@@ -1,5 +1,6 @@
 package com.finzly.bbc.services.billing;
 
+import com.finzly.bbc.constants.ConnectionStatus;
 import com.finzly.bbc.dtos.billing.ConnectionRequest;
 import com.finzly.bbc.dtos.billing.ConnectionResponse;
 import com.finzly.bbc.dtos.common.PaginationRequest;
@@ -8,7 +9,6 @@ import com.finzly.bbc.exceptions.BadRequestException;
 import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.billing.Connection;
-import com.finzly.bbc.models.billing.ConnectionStatus;
 import com.finzly.bbc.models.billing.ConnectionType;
 import com.finzly.bbc.repositories.auth.CustomerRepository;
 import com.finzly.bbc.repositories.billing.ConnectionRepository;

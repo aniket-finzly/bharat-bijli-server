@@ -1,5 +1,6 @@
 package com.finzly.bbc.models.billing;
 
+import com.finzly.bbc.constants.ConnectionStatus;
 import com.finzly.bbc.models.auth.Customer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

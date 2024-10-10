@@ -1,5 +1,6 @@
 package com.finzly.bbc.models.billing;
 
+import com.finzly.bbc.constants.InvoiceTransactionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,7 +43,7 @@ public class Invoice {
     private Double finalAmount;
 
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+    private InvoiceTransactionStatus paymentStatus;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

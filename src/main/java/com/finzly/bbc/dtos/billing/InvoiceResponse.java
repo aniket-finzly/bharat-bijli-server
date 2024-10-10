@@ -1,6 +1,6 @@
 package com.finzly.bbc.dtos.billing;
 
-import com.finzly.bbc.models.billing.PaymentStatus;
+import com.finzly.bbc.constants.InvoiceTransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +27,7 @@ public class InvoiceResponse {
     private Integer units;
     private Double billAmount;
     private Double finalAmount;
-    private PaymentStatus paymentStatus;
+    private InvoiceTransactionStatus paymentStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

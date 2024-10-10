@@ -1,12 +1,14 @@
 package com.finzly.bbc.services.billing;
 
+import com.finzly.bbc.constants.ConnectionStatus;
+import com.finzly.bbc.constants.InvoiceTransactionStatus;
+import com.finzly.bbc.constants.PaymentType;
 import com.finzly.bbc.dtos.billing.*;
 import com.finzly.bbc.exceptions.BadRequestException;
 import com.finzly.bbc.exceptions.ConflictException;
 import com.finzly.bbc.exceptions.ResourceNotFoundException;
 import com.finzly.bbc.models.auth.Customer;
 import com.finzly.bbc.models.billing.*;
-import com.finzly.bbc.models.payment.PaymentType;
 import com.finzly.bbc.models.payment.Transaction;
 import com.finzly.bbc.repositories.auth.CustomerRepository;
 import com.finzly.bbc.repositories.billing.ConnectionRepository;
@@ -166,7 +168,7 @@ public class InvoiceService {
     // Method to get all invoices
     public List<InvoiceResponse> getAllInvoicesForCustomer (
             String customerId,
-            PaymentStatus paymentStatus,
+            InvoiceTransactionStatus paymentStatus,
             LocalDate startDate,
             LocalDate endDate
     ) {
@@ -205,7 +207,7 @@ public class InvoiceService {
         Invoice invoice = invoiceRepository.findById (invoiceByUpi.getInvoiceId ())
                 .orElseThrow (() -> new ResourceNotFoundException ("Invoice not found"));
 
-        if (invoice.getPaymentStatus ().equals (PaymentStatus.PAID)) {
+        if (invoice.getPaymentStatus ().equals (InvoiceTransactionStatus.PAID)) {
             throw new BadRequestException ("Invoice has already been paid");
         }
 
@@ -218,18 +220,18 @@ public class InvoiceService {
         Transaction transaction = upiService.payByUPI (invoiceByUpi.getSenderUpiId (), receiverUpiId, invoiceByUpi.getSenderPin (), amount);
 
         if (transaction == null) {
-            invoice.setPaymentStatus (PaymentStatus.UNPAID);
+            invoice.setPaymentStatus (InvoiceTransactionStatus.UNPAID);
             PaymentTransaction paymentTransaction = new PaymentTransaction ();
             paymentTransaction.setInvoice (invoice);
-            paymentTransaction.setPaymentStatus (PaymentStatus.FAILED);
+            paymentTransaction.setPaymentStatus (InvoiceTransactionStatus.FAILED);
             paymentTransaction.setPaymentAmount (amount);
             paymentTransaction.setPaymentType (PaymentType.UPI);
             paymentTransactionRepository.save (paymentTransaction);
         } else {
-            invoice.setPaymentStatus (PaymentStatus.PAID);
+            invoice.setPaymentStatus (InvoiceTransactionStatus.PAID);
             PaymentTransaction paymentTransaction = new PaymentTransaction ();
             paymentTransaction.setInvoice (invoice);
-            paymentTransaction.setPaymentStatus (PaymentStatus.PAID);
+            paymentTransaction.setPaymentStatus (InvoiceTransactionStatus.PAID);
             paymentTransaction.setPaymentAmount (amount);
             paymentTransaction.setPaymentType (PaymentType.UPI);
             paymentTransactionRepository.save (paymentTransaction);
@@ -304,7 +306,7 @@ public class InvoiceService {
         invoice.setUnits (invoiceRequest.getUnits ());
         invoice.setBillAmount (billAmount);
         invoice.setFinalAmount (billAmount);  // Final amount may include adjustments if needed
-        invoice.setPaymentStatus (PaymentStatus.PENDING);
+        invoice.setPaymentStatus (InvoiceTransactionStatus.PENDING);
         return invoice;
     }
 }

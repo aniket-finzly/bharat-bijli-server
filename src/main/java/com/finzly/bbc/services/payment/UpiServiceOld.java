@@ -89,7 +89,7 @@ public class UpiServiceOld {
 //        return EncryptionUtil.decrypt (encryptedPin, encryptionKey);
 //    }
 //
-//    public PaymentStatus handleUpiPayment (UpiPaymentDTO upiPaymentDTO) throws Exception {
+//    public TransactPaymentStatus handleUpiPayment (UpiPaymentDTO upiPaymentDTO) throws Exception {
 //        Upi sender = upiRepository.findByUpiId (upiPaymentDTO.getSenderUpiId ());
 //        Upi receiver = upiRepository.findByUpiId (upiPaymentDTO.getReceiverUpiId ());
 //
@@ -111,7 +111,7 @@ public class UpiServiceOld {
 //        // Send email notifications
 //        sendPaymentEmails (sender, receiver, upiPaymentDTO.getAmount ());
 //
-//        return PaymentStatus.SUCCESS;
+//        return TransactPaymentStatus.SUCCESS;
 //    }
 //
 //    private void sendPaymentEmails (Upi sender, Upi receiver, Long amount) {

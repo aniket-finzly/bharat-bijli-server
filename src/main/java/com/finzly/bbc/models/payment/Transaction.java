@@ -1,5 +1,8 @@
 package com.finzly.bbc.models.payment;
 
+import com.finzly.bbc.constants.PaymentType;
+import com.finzly.bbc.constants.TransactPaymentStatus;
+import com.finzly.bbc.constants.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -37,7 +40,7 @@ public class Transaction {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus status;
+    private TransactPaymentStatus status;
 
     @Column(nullable = false)
     @CreationTimestamp

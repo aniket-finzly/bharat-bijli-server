@@ -1,9 +1,14 @@
 package com.finzly.bbc.services.payment;
 
+import com.finzly.bbc.constants.PaymentType;
+import com.finzly.bbc.constants.TransactPaymentStatus;
+import com.finzly.bbc.constants.TransactionType;
 import com.finzly.bbc.dtos.payment.UpiRequest;
 import com.finzly.bbc.dtos.payment.UpiResponse;
 import com.finzly.bbc.exceptions.BadRequestException;
-import com.finzly.bbc.models.payment.*;
+import com.finzly.bbc.models.payment.Account;
+import com.finzly.bbc.models.payment.Transaction;
+import com.finzly.bbc.models.payment.Upi;
 import com.finzly.bbc.repositories.payment.AccountRepository;
 import com.finzly.bbc.repositories.payment.TransactionRepository;
 import com.finzly.bbc.repositories.payment.UpiRepository;
@@ -111,7 +116,7 @@ public class UpiService {
         transaction.setAmount (amount);
         transaction.setType (TransactionType.DEBIT);
         transaction.setPaymentType (PaymentType.UPI);
-        transaction.setStatus (PaymentStatus.SUCCESS); // Update status as SUCCESS
+        transaction.setStatus (TransactPaymentStatus.SUCCESS); // Update status as SUCCESS
 
         transactionRepository.save (transaction);
 

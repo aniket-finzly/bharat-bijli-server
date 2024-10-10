@@ -1,7 +1,7 @@
-package com.finzly.bbc.models.billing;
+package com.finzly.bbc.constants;
 
 // Enum for Payment Status
-public enum PaymentStatus {
+public enum InvoiceTransactionStatus {
     PAID,
     UNPAID,
     PENDING,

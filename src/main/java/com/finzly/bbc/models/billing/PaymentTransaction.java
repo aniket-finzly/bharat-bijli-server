@@ -1,6 +1,7 @@
 package com.finzly.bbc.models.billing;
 
-import com.finzly.bbc.models.payment.PaymentType;
+import com.finzly.bbc.constants.InvoiceTransactionStatus;
+import com.finzly.bbc.constants.PaymentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,5 +37,5 @@ public class PaymentTransaction {
     private PaymentType paymentType;
 
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+    private InvoiceTransactionStatus paymentStatus;
 }
